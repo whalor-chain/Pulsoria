@@ -1,15 +1,14 @@
 import SwiftUI
 import AVFoundation
-import Network
 
 struct ContentView: View {
     @ObservedObject var player = AudioPlayerManager.shared
     @ObservedObject var store = BeatStoreManager.shared
     @ObservedObject var errorBanner = ErrorBannerManager.shared
+    @ObservedObject var network = NetworkMonitor.shared
     @State private var showPlayer = false
     @State private var showSharedImport = false
     @State private var sharedStagedImports: [StagedImport] = []
-    @State private var isOffline = false
 
     @ObservedObject var theme = ThemeManager.shared
 
@@ -32,7 +31,7 @@ struct ContentView: View {
             }
 
             VStack(spacing: 8) {
-                if isOffline {
+                if network.isOffline {
                     HStack(spacing: 6) {
                         Image(systemName: "wifi.slash")
                             .font(.system(size: 12, weight: .semibold))
@@ -93,18 +92,9 @@ struct ContentView: View {
             Text(err.message)
         }
         .animation(.easeInOut(duration: 0.3), value: player.currentTrack?.id)
-        .animation(.easeInOut(duration: 0.3), value: isOffline)
+        .animation(.easeInOut(duration: 0.3), value: network.isOffline)
         .animation(.smooth(duration: 0.3), value: theme.language)
         .animation(.smooth(duration: 0.3), value: store.userRole)
-        .onAppear {
-            let monitor = NWPathMonitor()
-            monitor.pathUpdateHandler = { path in
-                DispatchQueue.main.async {
-                    isOffline = path.status != .satisfied
-                }
-            }
-            monitor.start(queue: DispatchQueue(label: "NetworkMonitor"))
-        }
     }
 
     @MainActor
