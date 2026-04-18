@@ -8,8 +8,8 @@ struct SettingsView: View {
     @ObservedObject var store = BeatStoreManager.shared
     @ObservedObject var auth = AuthManager.shared
 
-    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
-    @AppStorage("userNickname") private var userNickname = ""
+    @AppStorage(UserDefaultsKey.hasCompletedOnboarding) private var hasCompletedOnboarding = true
+    @AppStorage(UserDefaultsKey.userNickname) private var userNickname = ""
     @State private var showResetAlert = false
     @State private var showLanguagePicker = false
     @State private var showRolePicker = false
@@ -150,7 +150,7 @@ struct SettingsView: View {
                     for i in player.tracks.indices {
                         player.tracks[i].isFavorite = false
                     }
-                    UserDefaults.standard.removeObject(forKey: "favoriteTrackIDs")
+                    UserDefaults.standard.removeObject(forKey: UserDefaultsKey.favoriteTrackIDs)
                 }
             } message: {
                 Text(Loc.resetFavoritesMsg)

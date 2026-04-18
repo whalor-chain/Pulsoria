@@ -34,7 +34,7 @@ struct AlbumDetailView: View {
         .task {
             await loadAlbumData()
             if let name = albumName {
-                let favs = Set(UserDefaults.standard.stringArray(forKey: "favoriteAlbums") ?? [])
+                let favs = Set(UserDefaults.standard.stringArray(forKey: UserDefaultsKey.favoriteAlbums) ?? [])
                 isFavorite = favs.contains(name.lowercased())
             }
         }
@@ -211,14 +211,14 @@ struct AlbumDetailView: View {
             withAnimation(.bouncy(duration: 0.4)) {
                 isFavorite.toggle()
                 guard let name = albumName else { return }
-                var favs = Set(UserDefaults.standard.stringArray(forKey: "favoriteAlbums") ?? [])
+                var favs = Set(UserDefaults.standard.stringArray(forKey: UserDefaultsKey.favoriteAlbums) ?? [])
                 let key = name.lowercased()
                 if isFavorite {
                     favs.insert(key)
                 } else {
                     favs.remove(key)
                 }
-                UserDefaults.standard.set(Array(favs), forKey: "favoriteAlbums")
+                UserDefaults.standard.set(Array(favs), forKey: UserDefaultsKey.favoriteAlbums)
             }
         } label: {
             HStack(spacing: 8) {

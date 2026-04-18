@@ -50,8 +50,8 @@ struct LibraryView: View {
     @State private var selectedArtist: ArtistSelection?
     @State private var showFavoritesOnly = false
     @State private var showFavoriteArtistsOnly = false
-    @State private var favoriteArtistNames: Set<String> = Set(UserDefaults.standard.stringArray(forKey: "favoriteArtists") ?? [])
-    @State private var favoriteAlbumNames: Set<String> = Set(UserDefaults.standard.stringArray(forKey: "favoriteAlbums") ?? [])
+    @State private var favoriteArtistNames: Set<String> = Set(UserDefaults.standard.stringArray(forKey: UserDefaultsKey.favoriteArtists) ?? [])
+    @State private var favoriteAlbumNames: Set<String> = Set(UserDefaults.standard.stringArray(forKey: UserDefaultsKey.favoriteAlbums) ?? [])
     @State private var showFavoriteAlbumsOnly = false
     @State private var showFileImporter = false
     @State private var importError: String?
@@ -410,8 +410,8 @@ struct LibraryView: View {
                 )
             }
             .onAppear {
-                favoriteArtistNames = Set(UserDefaults.standard.stringArray(forKey: "favoriteArtists") ?? [])
-                favoriteAlbumNames = Set(UserDefaults.standard.stringArray(forKey: "favoriteAlbums") ?? [])
+                favoriteArtistNames = Set(UserDefaults.standard.stringArray(forKey: UserDefaultsKey.favoriteArtists) ?? [])
+                favoriteAlbumNames = Set(UserDefaults.standard.stringArray(forKey: UserDefaultsKey.favoriteAlbums) ?? [])
             }
         }
     }
@@ -723,7 +723,7 @@ struct LibraryView: View {
         } else {
             favoriteArtistNames.insert(key)
         }
-        UserDefaults.standard.set(Array(favoriteArtistNames), forKey: "favoriteArtists")
+        UserDefaults.standard.set(Array(favoriteArtistNames), forKey: UserDefaultsKey.favoriteArtists)
     }
 
     private func toggleFavoriteAlbum(_ name: String) {
@@ -733,7 +733,7 @@ struct LibraryView: View {
         } else {
             favoriteAlbumNames.insert(key)
         }
-        UserDefaults.standard.set(Array(favoriteAlbumNames), forKey: "favoriteAlbums")
+        UserDefaults.standard.set(Array(favoriteAlbumNames), forKey: UserDefaultsKey.favoriteAlbums)
     }
 
     private func trackCount(for artist: String) -> Int {

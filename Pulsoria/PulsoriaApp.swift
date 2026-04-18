@@ -12,7 +12,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 @main
 struct PulsoriaApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
-    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @AppStorage(UserDefaultsKey.hasCompletedOnboarding) private var hasCompletedOnboarding = false
     @StateObject private var theme = ThemeManager.shared
     @StateObject private var auth = AuthManager.shared
     @State private var showSplash = true

@@ -39,8 +39,8 @@ class TonWalletManager: ObservableObject {
     @Published var connectionError: String? = nil
 
     private let db = Firestore.firestore()
-    private let sessionKey = "tonConnectSession"
-    private let walletKey = "tonWalletAddress"
+    
+    
     private var session: TonConnectSession?
     private var bridgeTask: Task<Void, Never>?
     private var activeBridgeUrl = "https://bridge.tonapi.io/bridge"
@@ -71,7 +71,7 @@ class TonWalletManager: ObservableObject {
     // MARK: - Session Persistence
 
     private func loadSession() {
-        if let data = UserDefaults.standard.data(forKey: sessionKey),
+        if let data = UserDefaults.standard.data(forKey: UserDefaultsKey.tonConnectSession),
            let saved = try? JSONDecoder().decode(TonConnectSession.self, from: data) {
             session = saved
             if let addr = saved.walletAddress, !addr.isEmpty {
@@ -85,7 +85,7 @@ class TonWalletManager: ObservableObject {
     private func saveSession() {
         guard let session else { return }
         if let data = try? JSONEncoder().encode(session) {
-            UserDefaults.standard.set(data, forKey: sessionKey)
+            UserDefaults.standard.set(data, forKey: UserDefaultsKey.tonConnectSession)
         }
     }
 
@@ -294,7 +294,7 @@ class TonWalletManager: ObservableObject {
                     }
 
                     // Save to UserDefaults + Firestore
-                    UserDefaults.standard.set(address, forKey: walletKey)
+                    UserDefaults.standard.set(address, forKey: UserDefaultsKey.tonWalletAddress)
                     let userID = AuthManager.shared.appleUserID
                     if !userID.isEmpty {
                         try? await db.collection("users").document(userID).setData([
@@ -320,7 +320,7 @@ class TonWalletManager: ObservableObject {
 
         walletAddress = trimmed
         isConnected = true
-        UserDefaults.standard.set(trimmed, forKey: walletKey)
+        UserDefaults.standard.set(trimmed, forKey: UserDefaultsKey.tonWalletAddress)
 
         let userID = AuthManager.shared.appleUserID
         if !userID.isEmpty {
@@ -344,8 +344,8 @@ class TonWalletManager: ObservableObject {
         session = nil
         bridgeTask?.cancel()
 
-        UserDefaults.standard.removeObject(forKey: walletKey)
-        UserDefaults.standard.removeObject(forKey: sessionKey)
+        UserDefaults.standard.removeObject(forKey: UserDefaultsKey.tonWalletAddress)
+        UserDefaults.standard.removeObject(forKey: UserDefaultsKey.tonConnectSession)
 
         let userID = AuthManager.shared.appleUserID
         if !userID.isEmpty {

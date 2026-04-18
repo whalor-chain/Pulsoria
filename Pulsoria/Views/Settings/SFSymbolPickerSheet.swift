@@ -402,16 +402,16 @@ struct SFSymbolPickerSheet: View {
     }
 
     private var recentSymbols: [String] {
-        let saved = UserDefaults.standard.stringArray(forKey: "recentSliderSymbols") ?? []
+        let saved = UserDefaults.standard.stringArray(forKey: UserDefaultsKey.recentSliderSymbols) ?? []
         return saved
     }
 
     private func addToRecent(_ symbol: String) {
-        var recent = UserDefaults.standard.stringArray(forKey: "recentSliderSymbols") ?? []
+        var recent = UserDefaults.standard.stringArray(forKey: UserDefaultsKey.recentSliderSymbols) ?? []
         recent.removeAll { $0 == symbol }
         recent.insert(symbol, at: 0)
         if recent.count > 16 { recent = Array(recent.prefix(16)) }
-        UserDefaults.standard.set(recent, forKey: "recentSliderSymbols")
+        UserDefaults.standard.set(recent, forKey: UserDefaultsKey.recentSliderSymbols)
     }
 
     private var displaySymbols: [String] {

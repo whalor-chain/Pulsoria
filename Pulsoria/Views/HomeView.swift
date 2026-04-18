@@ -7,7 +7,7 @@ struct HomeView: View {
     @ObservedObject var genius = GeniusManager.shared
     @State private var showSettings = false
     @State private var showStats = false
-    @AppStorage("userNickname") private var userNickname = ""
+    @AppStorage(UserDefaultsKey.userNickname) private var userNickname = ""
     @State private var profileImage: UIImage? = SettingsView.loadProfileImage()
 
     private var greeting: String {

@@ -59,7 +59,7 @@ class AudioPlayerManager: NSObject, ObservableObject {
 
     // Crossfade
     @Published var crossfadeDuration: TimeInterval {
-        didSet { UserDefaults.standard.set(crossfadeDuration, forKey: "crossfadeDuration") }
+        didSet { UserDefaults.standard.set(crossfadeDuration, forKey: UserDefaultsKey.crossfadeDuration) }
     }
 
     private(set) var audioPlayer: AVAudioPlayer?
@@ -90,7 +90,7 @@ class AudioPlayerManager: NSObject, ObservableObject {
     private let appGroupID = "group.Wave.Pulsoria"
 
     private override init() {
-        self.crossfadeDuration = UserDefaults.standard.double(forKey: "crossfadeDuration")
+        self.crossfadeDuration = UserDefaults.standard.double(forKey: UserDefaultsKey.crossfadeDuration)
         super.init()
         setupAudioSession()
         setupRemoteCommandCenter()
@@ -155,10 +155,10 @@ class AudioPlayerManager: NSObject, ObservableObject {
             for: .documentDirectory, in: .userDomainMask
         ).first else { return }
 
-        let favoriteIDs = UserDefaults.standard.stringArray(forKey: "favoriteTrackIDs") ?? []
-        let playCounts = UserDefaults.standard.dictionary(forKey: "trackPlayCounts") as? [String: Int] ?? [:]
-        let lastPlayedDict = UserDefaults.standard.dictionary(forKey: "trackLastPlayed") as? [String: Double] ?? [:]
-        let dateAddedDict = UserDefaults.standard.dictionary(forKey: "trackDateAdded") as? [String: Double] ?? [:]
+        let favoriteIDs = UserDefaults.standard.stringArray(forKey: UserDefaultsKey.favoriteTrackIDs) ?? []
+        let playCounts = UserDefaults.standard.dictionary(forKey: UserDefaultsKey.trackPlayCounts) as? [String: Int] ?? [:]
+        let lastPlayedDict = UserDefaults.standard.dictionary(forKey: UserDefaultsKey.trackLastPlayed) as? [String: Double] ?? [:]
+        let dateAddedDict = UserDefaults.standard.dictionary(forKey: UserDefaultsKey.trackDateAdded) as? [String: Double] ?? [:]
 
         do {
             let files = try FileManager.default.contentsOfDirectory(
@@ -192,7 +192,7 @@ class AudioPlayerManager: NSObject, ObservableObject {
             }
 
             // Restore saved track order
-            let savedOrder = UserDefaults.standard.stringArray(forKey: "trackOrder") ?? []
+            let savedOrder = UserDefaults.standard.stringArray(forKey: UserDefaultsKey.trackOrder) ?? []
             if savedOrder.isEmpty {
                 tracks = loadedTracks
             } else {
@@ -673,19 +673,19 @@ class AudioPlayerManager: NSObject, ObservableObject {
 
     private func saveFavorites() {
         let favoriteIDs = tracks.filter(\.isFavorite).map(\.fileName)
-        UserDefaults.standard.set(favoriteIDs, forKey: "favoriteTrackIDs")
+        UserDefaults.standard.set(favoriteIDs, forKey: UserDefaultsKey.favoriteTrackIDs)
     }
 
     private func saveTrackOrder() {
         let order = tracks.map(\.fileName)
-        UserDefaults.standard.set(order, forKey: "trackOrder")
+        UserDefaults.standard.set(order, forKey: UserDefaultsKey.trackOrder)
     }
 
     // MARK: - Play Tracking
 
     private func savePlayCounts() {
         let dict = Dictionary(uniqueKeysWithValues: tracks.map { ($0.fileName, $0.playCount) })
-        UserDefaults.standard.set(dict, forKey: "trackPlayCounts")
+        UserDefaults.standard.set(dict, forKey: UserDefaultsKey.trackPlayCounts)
     }
 
     private func saveLastPlayed() {
@@ -693,7 +693,7 @@ class AudioPlayerManager: NSObject, ObservableObject {
             guard let date = track.lastPlayed else { return nil }
             return (track.fileName, date.timeIntervalSince1970)
         })
-        UserDefaults.standard.set(dict, forKey: "trackLastPlayed")
+        UserDefaults.standard.set(dict, forKey: UserDefaultsKey.trackLastPlayed)
     }
 
     private func saveTrackData() {
@@ -703,7 +703,7 @@ class AudioPlayerManager: NSObject, ObservableObject {
 
     private func saveDateAdded() {
         let dict = Dictionary(uniqueKeysWithValues: tracks.map { ($0.fileName, $0.dateAdded.timeIntervalSince1970) })
-        UserDefaults.standard.set(dict, forKey: "trackDateAdded")
+        UserDefaults.standard.set(dict, forKey: UserDefaultsKey.trackDateAdded)
     }
 
     // MARK: - Dashboard Data
@@ -767,7 +767,7 @@ class AudioPlayerManager: NSObject, ObservableObject {
     }
 
     var totalListeningTime: TimeInterval {
-        UserDefaults.standard.double(forKey: "totalListeningSeconds")
+        UserDefaults.standard.double(forKey: UserDefaultsKey.totalListeningSeconds)
     }
 
     private static let todayFormatter: DateFormatter = {
@@ -781,22 +781,22 @@ class AudioPlayerManager: NSObject, ObservableObject {
     }
 
     var todayPlays: Int {
-        UserDefaults.standard.integer(forKey: "playsToday_\(todayKey)")
+        UserDefaults.standard.integer(forKey: UserDefaultsKey.playsToday(todayKey))
     }
 
     var todayListeningTime: TimeInterval {
-        UserDefaults.standard.double(forKey: "listeningToday_\(todayKey)")
+        UserDefaults.standard.double(forKey: UserDefaultsKey.listeningToday(todayKey))
     }
 
     private func incrementTodayPlays() {
-        let key = "playsToday_\(todayKey)"
+        let key = UserDefaultsKey.playsToday(todayKey)
         let current = UserDefaults.standard.integer(forKey: key)
         UserDefaults.standard.set(current + 1, forKey: key)
     }
 
     private func addListeningTime(_ seconds: TimeInterval) {
-        let totalKey = "totalListeningSeconds"
-        let todayLKey = "listeningToday_\(todayKey)"
+        let totalKey = UserDefaultsKey.totalListeningSeconds
+        let todayLKey = UserDefaultsKey.listeningToday(todayKey)
         let total = UserDefaults.standard.double(forKey: totalKey) + seconds
         let today = UserDefaults.standard.double(forKey: todayLKey) + seconds
         UserDefaults.standard.set(total, forKey: totalKey)

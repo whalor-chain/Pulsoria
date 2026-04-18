@@ -13,12 +13,6 @@ class AuthManager: ObservableObject {
     @Published var userEmail: String = ""
     @Published var appleUserID: String = ""
 
-    private let userIDKey = "appleUserID"
-    private let userNameKey = "appleUserName"
-    private let userEmailKey = "appleUserEmail"
-    private let isSignedInKey = "appleSignedIn"
-    private let didPassKey = "didPassSignIn"
-
     private init() {
         loadUser()
     }
@@ -39,21 +33,21 @@ class AuthManager: ObservableObject {
                     .joined(separator: " ")
                 if !name.isEmpty {
                     userName = name
-                    UserDefaults.standard.set(name, forKey: userNameKey)
+                    UserDefaults.standard.set(name, forKey: UserDefaultsKey.appleUserName)
                 }
             }
 
             if let email = credential.email {
                 userEmail = email
-                UserDefaults.standard.set(email, forKey: userEmailKey)
+                UserDefaults.standard.set(email, forKey: UserDefaultsKey.appleUserEmail)
             }
 
             appleUserID = userID
             isSignedIn = true
             didPassSignIn = true
-            UserDefaults.standard.set(userID, forKey: userIDKey)
-            UserDefaults.standard.set(true, forKey: isSignedInKey)
-            UserDefaults.standard.set(true, forKey: didPassKey)
+            UserDefaults.standard.set(userID, forKey: UserDefaultsKey.appleUserID)
+            UserDefaults.standard.set(true, forKey: UserDefaultsKey.appleSignedIn)
+            UserDefaults.standard.set(true, forKey: UserDefaultsKey.didPassSignIn)
 
         case .failure:
             break
@@ -82,19 +76,19 @@ class AuthManager: ObservableObject {
         userName = ""
         userEmail = ""
         appleUserID = ""
-        UserDefaults.standard.removeObject(forKey: userIDKey)
-        UserDefaults.standard.removeObject(forKey: userNameKey)
-        UserDefaults.standard.removeObject(forKey: userEmailKey)
-        UserDefaults.standard.set(false, forKey: isSignedInKey)
+        UserDefaults.standard.removeObject(forKey: UserDefaultsKey.appleUserID)
+        UserDefaults.standard.removeObject(forKey: UserDefaultsKey.appleUserName)
+        UserDefaults.standard.removeObject(forKey: UserDefaultsKey.appleUserEmail)
+        UserDefaults.standard.set(false, forKey: UserDefaultsKey.appleSignedIn)
     }
 
     // MARK: - Load
 
     private func loadUser() {
-        isSignedIn = UserDefaults.standard.bool(forKey: isSignedInKey)
-        didPassSignIn = UserDefaults.standard.bool(forKey: didPassKey)
-        appleUserID = UserDefaults.standard.string(forKey: userIDKey) ?? ""
-        userName = UserDefaults.standard.string(forKey: userNameKey) ?? ""
-        userEmail = UserDefaults.standard.string(forKey: userEmailKey) ?? ""
+        isSignedIn = UserDefaults.standard.bool(forKey: UserDefaultsKey.appleSignedIn)
+        didPassSignIn = UserDefaults.standard.bool(forKey: UserDefaultsKey.didPassSignIn)
+        appleUserID = UserDefaults.standard.string(forKey: UserDefaultsKey.appleUserID) ?? ""
+        userName = UserDefaults.standard.string(forKey: UserDefaultsKey.appleUserName) ?? ""
+        userEmail = UserDefaults.standard.string(forKey: UserDefaultsKey.appleUserEmail) ?? ""
     }
 }

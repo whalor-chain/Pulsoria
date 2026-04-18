@@ -502,19 +502,19 @@ class ThemeManager: ObservableObject {
     static let shared = ThemeManager()
 
     @Published var currentTheme: AppTheme {
-        didSet { UserDefaults.standard.set(currentTheme.rawValue, forKey: "appTheme") }
+        didSet { UserDefaults.standard.set(currentTheme.rawValue, forKey: UserDefaultsKey.appTheme) }
     }
 
     @Published var appearance: AppAppearance {
-        didSet { UserDefaults.standard.set(appearance.rawValue, forKey: "appAppearance") }
+        didSet { UserDefaults.standard.set(appearance.rawValue, forKey: UserDefaultsKey.appAppearance) }
     }
 
     @Published var sliderIcon: SliderIcon {
-        didSet { UserDefaults.standard.set(sliderIcon.rawValue, forKey: "sliderIcon") }
+        didSet { UserDefaults.standard.set(sliderIcon.rawValue, forKey: UserDefaultsKey.sliderIcon) }
     }
 
     @Published var customSliderSymbol: String {
-        didSet { UserDefaults.standard.set(customSliderSymbol, forKey: "customSliderSymbol") }
+        didSet { UserDefaults.standard.set(customSliderSymbol, forKey: UserDefaultsKey.customSliderSymbol) }
     }
 
     var activeSliderSymbol: String {
@@ -525,21 +525,21 @@ class ThemeManager: ObservableObject {
     }
 
     @Published var language: AppLanguage {
-        didSet { UserDefaults.standard.set(language.rawValue, forKey: "appLanguage") }
+        didSet { UserDefaults.standard.set(language.rawValue, forKey: UserDefaultsKey.appLanguage) }
     }
 
     private init() {
-        let themeRaw = UserDefaults.standard.string(forKey: "appTheme") ?? "Purple"
+        let themeRaw = UserDefaults.standard.string(forKey: UserDefaultsKey.appTheme) ?? "Purple"
         self.currentTheme = AppTheme(rawValue: themeRaw) ?? .purple
 
-        let appearanceRaw = UserDefaults.standard.string(forKey: "appAppearance") ?? "Dark"
+        let appearanceRaw = UserDefaults.standard.string(forKey: UserDefaultsKey.appAppearance) ?? "Dark"
         self.appearance = AppAppearance(rawValue: appearanceRaw) ?? .dark
 
-        let sliderRaw = UserDefaults.standard.string(forKey: "sliderIcon") ?? "Default"
+        let sliderRaw = UserDefaults.standard.string(forKey: UserDefaultsKey.sliderIcon) ?? "Default"
         self.sliderIcon = SliderIcon(rawValue: sliderRaw) ?? .defaultCircle
-        self.customSliderSymbol = UserDefaults.standard.string(forKey: "customSliderSymbol") ?? ""
+        self.customSliderSymbol = UserDefaults.standard.string(forKey: UserDefaultsKey.customSliderSymbol) ?? ""
 
-        let langRaw = UserDefaults.standard.string(forKey: "appLanguage") ?? "en"
+        let langRaw = UserDefaults.standard.string(forKey: UserDefaultsKey.appLanguage) ?? "en"
         self.language = AppLanguage(rawValue: langRaw) ?? .english
     }
 }

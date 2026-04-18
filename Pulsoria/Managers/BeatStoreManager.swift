@@ -19,7 +19,7 @@ class BeatStoreManager: ObservableObject {
     @Published var uploadProgress: Double = 0
 
     @Published var userRole: UserRole {
-        didSet { UserDefaults.standard.set(userRole.rawValue, forKey: "userRole") }
+        didSet { UserDefaults.standard.set(userRole.rawValue, forKey: UserDefaultsKey.userRole) }
     }
 
     // Preview playback
@@ -76,7 +76,7 @@ class BeatStoreManager: ObservableObject {
     // MARK: - Init
 
     private init() {
-        let roleRaw = UserDefaults.standard.string(forKey: "userRole") ?? "Listener"
+        let roleRaw = UserDefaults.standard.string(forKey: UserDefaultsKey.userRole) ?? "Listener"
         self.userRole = UserRole(rawValue: roleRaw) ?? .listener
         startListening()
     }

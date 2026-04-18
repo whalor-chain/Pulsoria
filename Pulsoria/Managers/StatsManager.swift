@@ -808,29 +808,29 @@ class StatsManager: ObservableObject {
     // MARK: - Persistence
 
     private func loadData() {
-        hourlyPlays = (UserDefaults.standard.array(forKey: "stats_hourlyPlays") as? [Int]) ?? Array(repeating: 0, count: 24)
+        hourlyPlays = (UserDefaults.standard.array(forKey: UserDefaultsKey.statsHourlyPlays) as? [Int]) ?? Array(repeating: 0, count: 24)
         if hourlyPlays.count != 24 { hourlyPlays = Array(repeating: 0, count: 24) }
-        currentStreak = UserDefaults.standard.integer(forKey: "stats_currentStreak")
-        bestStreak = UserDefaults.standard.integer(forKey: "stats_bestStreak")
-        unlockedAchievements = Set(UserDefaults.standard.stringArray(forKey: "stats_unlocked") ?? [])
-        xp = UserDefaults.standard.integer(forKey: "stats_xp")
-        level = UserDefaults.standard.integer(forKey: "stats_level")
+        currentStreak = UserDefaults.standard.integer(forKey: UserDefaultsKey.statsCurrentStreak)
+        bestStreak = UserDefaults.standard.integer(forKey: UserDefaultsKey.statsBestStreak)
+        unlockedAchievements = Set(UserDefaults.standard.stringArray(forKey: UserDefaultsKey.statsUnlocked) ?? [])
+        xp = UserDefaults.standard.integer(forKey: UserDefaultsKey.statsXP)
+        level = UserDefaults.standard.integer(forKey: UserDefaultsKey.statsLevel)
         if level == 0 { level = 1 }
-        queueAdds = UserDefaults.standard.integer(forKey: "stats_queueAdds")
-        weekendPlays = UserDefaults.standard.integer(forKey: "stats_weekendPlays")
-        totalDaysListened = UserDefaults.standard.integer(forKey: "stats_totalDaysListened")
+        queueAdds = UserDefaults.standard.integer(forKey: UserDefaultsKey.statsQueueAdds)
+        weekendPlays = UserDefaults.standard.integer(forKey: UserDefaultsKey.statsWeekendPlays)
+        totalDaysListened = UserDefaults.standard.integer(forKey: UserDefaultsKey.statsTotalDaysListened)
     }
 
     private func save() {
-        UserDefaults.standard.set(hourlyPlays, forKey: "stats_hourlyPlays")
-        UserDefaults.standard.set(currentStreak, forKey: "stats_currentStreak")
-        UserDefaults.standard.set(bestStreak, forKey: "stats_bestStreak")
-        UserDefaults.standard.set(Array(unlockedAchievements), forKey: "stats_unlocked")
-        UserDefaults.standard.set(xp, forKey: "stats_xp")
-        UserDefaults.standard.set(level, forKey: "stats_level")
-        UserDefaults.standard.set(queueAdds, forKey: "stats_queueAdds")
-        UserDefaults.standard.set(weekendPlays, forKey: "stats_weekendPlays")
-        UserDefaults.standard.set(totalDaysListened, forKey: "stats_totalDaysListened")
+        UserDefaults.standard.set(hourlyPlays, forKey: UserDefaultsKey.statsHourlyPlays)
+        UserDefaults.standard.set(currentStreak, forKey: UserDefaultsKey.statsCurrentStreak)
+        UserDefaults.standard.set(bestStreak, forKey: UserDefaultsKey.statsBestStreak)
+        UserDefaults.standard.set(Array(unlockedAchievements), forKey: UserDefaultsKey.statsUnlocked)
+        UserDefaults.standard.set(xp, forKey: UserDefaultsKey.statsXP)
+        UserDefaults.standard.set(level, forKey: UserDefaultsKey.statsLevel)
+        UserDefaults.standard.set(queueAdds, forKey: UserDefaultsKey.statsQueueAdds)
+        UserDefaults.standard.set(weekendPlays, forKey: UserDefaultsKey.statsWeekendPlays)
+        UserDefaults.standard.set(totalDaysListened, forKey: UserDefaultsKey.statsTotalDaysListened)
     }
 
     // MARK: - Record Play
@@ -860,7 +860,7 @@ class StatsManager: ObservableObject {
     private func updateStreak() {
         let cal = Calendar.current
         let today = cal.startOfDay(for: Date())
-        let lastDate = UserDefaults.standard.object(forKey: "stats_lastPlayDate") as? Date
+        let lastDate = UserDefaults.standard.object(forKey: UserDefaultsKey.statsLastPlayDate) as? Date
         let lastDay = lastDate.map { cal.startOfDay(for: $0) }
 
         if lastDay == today {
@@ -877,19 +877,19 @@ class StatsManager: ObservableObject {
             bestStreak = currentStreak
         }
 
-        UserDefaults.standard.set(Date(), forKey: "stats_lastPlayDate")
+        UserDefaults.standard.set(Date(), forKey: UserDefaultsKey.statsLastPlayDate)
         save()
     }
 
     private func updateTotalDays() {
         let cal = Calendar.current
         let today = cal.startOfDay(for: Date())
-        let lastCountedDay = UserDefaults.standard.object(forKey: "stats_lastCountedDay") as? Date
+        let lastCountedDay = UserDefaults.standard.object(forKey: UserDefaultsKey.statsLastCountedDay) as? Date
         let lastDay = lastCountedDay.map { cal.startOfDay(for: $0) }
 
         if lastDay != today {
             totalDaysListened += 1
-            UserDefaults.standard.set(Date(), forKey: "stats_lastCountedDay")
+            UserDefaults.standard.set(Date(), forKey: UserDefaultsKey.statsLastCountedDay)
         }
     }
 
@@ -986,7 +986,7 @@ class StatsManager: ObservableObject {
             guard let date = cal.date(byAdding: .day, value: -i, to: today) else { continue }
             let dayFormatter = DateFormatter()
             dayFormatter.dateFormat = "yyyy-MM-dd"
-            let key = "listeningToday_\(dayFormatter.string(from: date))"
+            let key = UserDefaultsKey.listeningToday(dayFormatter.string(from: date))
             let seconds = UserDefaults.standard.double(forKey: key)
             formatter.dateFormat = "EEE"
             let dayName = formatter.string(from: date)

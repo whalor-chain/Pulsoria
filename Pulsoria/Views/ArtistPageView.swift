@@ -57,7 +57,7 @@ struct ArtistPageView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            let favs = UserDefaults.standard.stringArray(forKey: "favoriteArtists") ?? []
+            let favs = UserDefaults.standard.stringArray(forKey: UserDefaultsKey.favoriteArtists) ?? []
             isFavoriteArtist = favs.contains(artistName.lowercased())
         }
         .task {
@@ -166,14 +166,14 @@ struct ArtistPageView: View {
     }
 
     private func saveFavoriteArtist() {
-        var favs = UserDefaults.standard.stringArray(forKey: "favoriteArtists") ?? []
+        var favs = UserDefaults.standard.stringArray(forKey: UserDefaultsKey.favoriteArtists) ?? []
         let key = artistName.lowercased()
         if isFavoriteArtist {
             if !favs.contains(key) { favs.append(key) }
         } else {
             favs.removeAll { $0 == key }
         }
-        UserDefaults.standard.set(favs, forKey: "favoriteArtists")
+        UserDefaults.standard.set(favs, forKey: UserDefaultsKey.favoriteArtists)
     }
 
     private func statBadge(value: String, label: String) -> some View {

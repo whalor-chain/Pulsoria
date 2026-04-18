@@ -7,7 +7,7 @@ class PlaylistManager: ObservableObject {
 
     @Published var playlists: [Playlist] = []
 
-    private let storageKey = "userPlaylists"
+    
 
     private init() {
         loadPlaylists()
@@ -16,7 +16,7 @@ class PlaylistManager: ObservableObject {
     // MARK: - Persistence
 
     private func loadPlaylists() {
-        guard let data = UserDefaults.standard.data(forKey: storageKey),
+        guard let data = UserDefaults.standard.data(forKey: UserDefaultsKey.userPlaylists),
               let decoded = try? JSONDecoder().decode([Playlist].self, from: data) else {
             return
         }
@@ -26,7 +26,7 @@ class PlaylistManager: ObservableObject {
     private func savePlaylists() {
         let userPlaylists = playlists.filter { !$0.isAutoFavorites }
         if let data = try? JSONEncoder().encode(userPlaylists) {
-            UserDefaults.standard.set(data, forKey: storageKey)
+            UserDefaults.standard.set(data, forKey: UserDefaultsKey.userPlaylists)
         }
     }
 
