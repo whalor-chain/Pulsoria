@@ -2,6 +2,7 @@ import Foundation
 import AVFoundation
 import Combine
 import MediaPlayer
+import OSLog
 import UIKit
 
 enum RepeatMode: Int {
@@ -105,7 +106,7 @@ class AudioPlayerManager: NSObject, ObservableObject {
             try session.setCategory(.playback, mode: .default)
             try session.setActive(true)
         } catch {
-            print("Failed to setup audio session: \(error)")
+            Logger.audio.error("Failed to setup audio session: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -214,7 +215,7 @@ class AudioPlayerManager: NSObject, ObservableObject {
             }
 
         } catch {
-            print("Failed to load tracks: \(error)")
+            Logger.audio.error("Failed to load tracks: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -254,7 +255,7 @@ class AudioPlayerManager: NSObject, ObservableObject {
             saveDateAdded()
             StatsManager.shared.checkAchievements()
         } catch {
-            print("Failed to import track: \(error)")
+            Logger.audio.error("Failed to import track: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -424,7 +425,7 @@ class AudioPlayerManager: NSObject, ObservableObject {
                 }
             }
         } catch {
-            print("Failed to play track: \(error)")
+            Logger.audio.error("Failed to play track: \(error.localizedDescription, privacy: .public)")
         }
     }
 

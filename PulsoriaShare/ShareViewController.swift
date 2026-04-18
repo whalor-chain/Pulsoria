@@ -5,8 +5,11 @@
 //  Created by Станислава Гункер on 12.04.2026.
 //
 
+import OSLog
 import UIKit
 import UniformTypeIdentifiers
+
+private let shareLog = Logger(subsystem: "Wave.Pulsoria.Share", category: "share")
 
 class ShareViewController: UIViewController {
 
@@ -105,7 +108,7 @@ class ShareViewController: UIViewController {
         do {
             try FileManager.default.copyItem(at: sourceURL, to: destination)
         } catch {
-            print("ShareExtension: Failed to copy file: \(error)")
+            shareLog.error("Failed to copy file: \(error.localizedDescription, privacy: .public)")
         }
     }
 
