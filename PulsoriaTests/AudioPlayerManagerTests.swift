@@ -62,4 +62,47 @@ struct AudioPlayerManagerTests {
         #expect(url?.lastPathComponent == "myFile.mp3")
         #expect(url?.path.contains("/Documents/") == true)
     }
+
+    // MARK: - Track.artistNames
+
+    private func track(artist: String) -> Track {
+        Track(title: "t", artist: artist, fileName: "f", fileExtension: "mp3")
+    }
+
+    @Test func artistNamesSingleArtist() {
+        #expect(track(artist: "Adele").artistNames == ["Adele"])
+    }
+
+    @Test func artistNamesSplitsOnAmpersand() {
+        #expect(track(artist: "Drake & Future").artistNames == ["Drake", "Future"])
+    }
+
+    @Test func artistNamesSplitsOnFeatVariants() {
+        #expect(track(artist: "Lana Del Rey feat. Weeknd").artistNames == ["Lana Del Rey", "Weeknd"])
+        #expect(track(artist: "A ft. B").artistNames == ["A", "B"])
+        #expect(track(artist: "A ft B").artistNames == ["A", "B"])
+        #expect(track(artist: "A feat B").artistNames == ["A", "B"])
+    }
+
+    @Test func artistNamesSplitsOnXSeparator() {
+        #expect(track(artist: "Alpha x Beta").artistNames == ["Alpha", "Beta"])
+        #expect(track(artist: "Alpha X Beta").artistNames == ["Alpha", "Beta"])
+    }
+
+    @Test func artistNamesHandlesMultipleSeparators() {
+        #expect(
+            track(artist: "A & B feat. C ft. D x E").artistNames
+                == ["A", "B", "C", "D", "E"]
+        )
+    }
+
+    @Test func artistNamesDoesNotSplitInsideWords() {
+        // "Xerox" contains an "x" but no separator (no surrounding spaces).
+        #expect(track(artist: "Xerox").artistNames == ["Xerox"])
+    }
+
+    @Test func artistNamesTrimsAndFiltersEmpties() {
+        #expect(track(artist: "  Adele  ").artistNames == ["Adele"])
+        #expect(track(artist: "").artistNames == [])
+    }
 }

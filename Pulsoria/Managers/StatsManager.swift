@@ -904,8 +904,8 @@ class StatsManager: ObservableObject {
         let totalHours = player.totalListeningTime / 3600.0
         let favoriteCount = player.tracks.filter(\.isFavorite).count
         let playlistCount = pm.playlists.count
-        let listenedArtists = Set(player.tracks.filter { $0.playCount > 0 }.flatMap { splitArtists($0.artist) }).count
-        let allArtists = Set(player.tracks.flatMap { splitArtists($0.artist) }).count
+        let listenedArtists = Set(player.tracks.filter { $0.playCount > 0 }.flatMap(\.artistNames)).count
+        let allArtists = Set(player.tracks.flatMap(\.artistNames)).count
         let nightOwlDone = hourlyPlays[0...4].reduce(0, +) > 0
         let earlyBirdDone = hourlyPlays[5...6].reduce(0, +) > 0
         let lunchDone = hourlyPlays[12...13].reduce(0, +) > 0
@@ -995,20 +995,6 @@ class StatsManager: ObservableObject {
         return result
     }
 
-    private func splitArtists(_ artist: String) -> [String] {
-        artist
-            .replacingOccurrences(of: " & ", with: ",")
-            .replacingOccurrences(of: " feat. ", with: ",")
-            .replacingOccurrences(of: " feat ", with: ",")
-            .replacingOccurrences(of: " ft. ", with: ",")
-            .replacingOccurrences(of: " ft ", with: ",")
-            .replacingOccurrences(of: " x ", with: ",")
-            .replacingOccurrences(of: " X ", with: ",")
-            .split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty }
-    }
-
     // MARK: - Artist Distribution
 
     func artistDistribution() -> [(name: String, percentage: Double)] {
@@ -1023,7 +1009,7 @@ class StatsManager: ObservableObject {
     func personality() -> ListeningPersonality {
         let player = AudioPlayerManager.shared
         let totalHours = player.totalListeningTime / 3600.0
-        let artistCount = Set(player.tracks.filter { $0.playCount > 0 }.flatMap { splitArtists($0.artist) }).count
+        let artistCount = Set(player.tracks.filter { $0.playCount > 0 }.flatMap(\.artistNames)).count
         let nightPlays = hourlyPlays[0...4].reduce(0, +)
         let totalHourlyPlays = max(1, hourlyPlays.reduce(0, +))
 

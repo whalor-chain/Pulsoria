@@ -731,27 +731,12 @@ class AudioPlayerManager: NSObject, ObservableObject {
         return result
     }
 
-    private func splitArtists(_ artist: String) -> [String] {
-        artist
-            .replacingOccurrences(of: " & ", with: ",")
-            .replacingOccurrences(of: " feat. ", with: ",")
-            .replacingOccurrences(of: " feat ", with: ",")
-            .replacingOccurrences(of: " ft. ", with: ",")
-            .replacingOccurrences(of: " ft ", with: ",")
-            .replacingOccurrences(of: " x ", with: ",")
-            .replacingOccurrences(of: " X ", with: ",")
-            .split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty }
-    }
-
     private var _topArtistsCache: [(name: String, playCount: Int)]?
     var topArtists: [(name: String, playCount: Int)] {
         if let cached = _topArtistsCache { return cached }
         var artistCounts: [String: Int] = [:]
         for track in tracks {
-            let artists = splitArtists(track.artist)
-            for artist in artists {
+            for artist in track.artistNames {
                 artistCounts[artist, default: 0] += track.playCount
             }
         }

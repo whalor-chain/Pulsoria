@@ -41,6 +41,23 @@ struct Track: Identifiable, Equatable, Hashable {
         return documentsPath?.appendingPathComponent("\(fileName).\(fileExtension)")
     }
 
+    /// Splits the `artist` field into individual artist names, handling the
+    /// common collaboration separators: `&`, `feat./feat/ft./ft`, and `x/X`.
+    /// Always returns trimmed, non-empty entries.
+    var artistNames: [String] {
+        artist
+            .replacingOccurrences(of: " & ", with: ",")
+            .replacingOccurrences(of: " feat. ", with: ",")
+            .replacingOccurrences(of: " feat ", with: ",")
+            .replacingOccurrences(of: " ft. ", with: ",")
+            .replacingOccurrences(of: " ft ", with: ",")
+            .replacingOccurrences(of: " x ", with: ",")
+            .replacingOccurrences(of: " X ", with: ",")
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+    }
+
     static func == (lhs: Track, rhs: Track) -> Bool {
         lhs.id == rhs.id
     }
