@@ -450,7 +450,7 @@ class GeniusManager: ObservableObject {
         }
     }
 
-    private func parseLRC(_ lrc: String) -> [SyncedLyricLine] {
+    func parseLRC(_ lrc: String) -> [SyncedLyricLine] {
         var lines: [SyncedLyricLine] = []
         let pattern = #"\[(\d{2}):(\d{2})\.(\d{2,3})\]\s*(.*)"#
         guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
@@ -541,7 +541,7 @@ class GeniusManager: ObservableObject {
         isLoadingLyrics = false
     }
 
-    private func cleanSearchString(_ str: String) -> String {
+    func cleanSearchString(_ str: String) -> String {
         var result = str
         // Remove content in parentheses: (feat. ...), (Remix), etc.
         while let open = result.range(of: "("),
@@ -556,7 +556,7 @@ class GeniusManager: ObservableObject {
         return result.trimmingCharacters(in: .whitespaces)
     }
 
-    private func findBestMatch(hits: [[String: Any]], title: String, artist: String) -> URL? {
+    func findBestMatch(hits: [[String: Any]], title: String, artist: String) -> URL? {
         let titleLower = title.lowercased()
         let artistLower = artist.lowercased()
 
@@ -615,7 +615,7 @@ class GeniusManager: ObservableObject {
         return best.url
     }
 
-    private func parseLyrics(from html: String) -> String {
+    func parseLyrics(from html: String) -> String {
         var lyrics = ""
 
         // Find all lyrics containers: data-lyrics-container="true"
