@@ -4,7 +4,12 @@ import FirebaseCore
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
-        FirebaseApp.configure()
+        // Firebase requires GoogleService-Info.plist in the app bundle.
+        // It is gitignored, so CI builds / fresh clones won't have it —
+        // skip configuration in that case so the test host can still boot.
+        if Bundle.main.url(forResource: "GoogleService-Info", withExtension: "plist") != nil {
+            FirebaseApp.configure()
+        }
         return true
     }
 }

@@ -1,0 +1,59 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel stale runs on the same branch when a new push arrives.
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Build & unit tests
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select latest-stable Xcode
+        # Bump the path when a newer Xcode becomes the runner default.
+        # `xcode-select -p` shows the current choice; `ls /Applications`
+        # shows what is installed.
+        run: sudo xcode-select --switch /Applications/Xcode.app
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Cache SwiftPM artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Developer/Xcode/DerivedData/**/SourcePackages
+            ~/Library/Caches/org.swift.swiftpm
+          key: spm-${{ runner.os }}-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: spm-${{ runner.os }}-
+
+      - name: Resolve Swift packages
+        run: >
+          xcodebuild
+          -resolvePackageDependencies
+          -project Pulsoria.xcodeproj
+          -scheme Pulsoria
+
+      - name: Run unit tests
+        run: >
+          xcodebuild test
+          -project Pulsoria.xcodeproj
+          -scheme Pulsoria
+          -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest'
+          -skipPackagePluginValidation
+          -skipMacroValidation
+          CODE_SIGN_IDENTITY=
+          CODE_SIGNING_REQUIRED=NO
+          CODE_SIGNING_ALLOWED=NO
