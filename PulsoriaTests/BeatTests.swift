@@ -1,5 +1,6 @@
 import Testing
 import Foundation
+import FirebaseFirestore
 @testable import Pulsoria
 
 struct BeatTests {
@@ -91,16 +92,17 @@ struct BeatTests {
         #expect(makeBeat(id: "a") != makeBeat(id: "b"))
     }
 
-    // MARK: - Codable
+    // MARK: - Codable (via Firestore.Encoder/Decoder)
 
-    @Test func codableRoundTripPreservesFields() throws {
-        let original = makeBeat(id: "beat-x", price: 14.50, priceTON: 3, durationSeconds: 200)
-        let encoded = try JSONEncoder().encode(original)
-        let decoded = try JSONDecoder().decode(Beat.self, from: encoded)
+    @Test func firestoreCodableRoundTripPreservesFields() throws {
+        // id is not round-tripped here — @DocumentID is written by the
+        // document *path*, not the body, so Firestore.Encoder strips it
+        // on encode and Firestore.Decoder populates it from the path on
+        // decode. Body-only round trip is what we verify.
+        let original = makeBeat(id: nil, price: 14.50, priceTON: 3, durationSeconds: 200)
+        let encoded = try Firestore.Encoder().encode(original)
+        let decoded = try Firestore.Decoder().decode(Beat.self, from: encoded)
 
-        // @DocumentID is written to / read from JSON like any optional String,
-        // so the id survives a vanilla Codable round-trip.
-        #expect(decoded.id == original.id)
         #expect(decoded.title == original.title)
         #expect(decoded.beatmakerName == original.beatmakerName)
         #expect(decoded.uploaderID == original.uploaderID)
@@ -112,6 +114,15 @@ struct BeatTests {
         #expect(decoded.durationSeconds == original.durationSeconds)
         #expect(decoded.coverImageName == original.coverImageName)
         #expect(decoded.purchasedBy == original.purchasedBy)
+        // Date is lossy via Firestore Timestamp (microsecond precision).
+        #expect(abs(decoded.dateAdded.timeIntervalSince1970 - original.dateAdded.timeIntervalSince1970) < 0.001)
+    }
+
+    @Test func firestoreEncoderOmitsDocumentID() throws {
+        let beat = makeBeat(id: "beat-x")
+        let dict = try Firestore.Encoder().encode(beat)
+        // @DocumentID must not appear in the document body — it's the document path.
+        #expect(dict["id"] == nil)
     }
 
     // MARK: - Enums
