@@ -1,4 +1,5 @@
 import Foundation
+import FirebaseFirestore
 
 // MARK: - Beat Genre
 
@@ -69,7 +70,7 @@ enum UserRole: String, CaseIterable, Codable, Identifiable {
 // MARK: - Beat
 
 struct Beat: Identifiable, Equatable, Codable, Hashable {
-    var id: String
+    @DocumentID var id: String?
     let title: String
     let beatmakerName: String
     let uploaderID: String
@@ -83,11 +84,10 @@ struct Beat: Identifiable, Equatable, Codable, Hashable {
     var coverImageURL: String?
     var audioURL: String?
     let dateAdded: Date
-    var isPurchased: Bool
     var purchasedBy: [String]
 
     init(
-        id: String = UUID().uuidString,
+        id: String? = nil,
         title: String,
         beatmakerName: String,
         uploaderID: String = "",
@@ -101,7 +101,6 @@ struct Beat: Identifiable, Equatable, Codable, Hashable {
         coverImageURL: String? = nil,
         audioURL: String? = nil,
         dateAdded: Date = Date(),
-        isPurchased: Bool = false,
         purchasedBy: [String] = []
     ) {
         self.id = id
@@ -118,7 +117,6 @@ struct Beat: Identifiable, Equatable, Codable, Hashable {
         self.coverImageURL = coverImageURL
         self.audioURL = audioURL
         self.dateAdded = dateAdded
-        self.isPurchased = isPurchased
         self.purchasedBy = purchasedBy
     }
 
@@ -142,59 +140,5 @@ struct Beat: Identifiable, Equatable, Codable, Hashable {
 
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
-    }
-
-    // MARK: - Firestore Dictionary
-
-    var firestoreData: [String: Any] {
-        var data: [String: Any] = [
-            "title": title,
-            "beatmakerName": beatmakerName,
-            "uploaderID": uploaderID,
-            "genre": genre.rawValue,
-            "bpm": bpm,
-            "key": key.rawValue,
-            "price": price,
-            "priceTON": priceTON,
-            "durationSeconds": durationSeconds,
-            "coverImageName": coverImageName,
-            "dateAdded": dateAdded.timeIntervalSince1970,
-            "purchasedBy": purchasedBy
-        ]
-        if let coverImageURL { data["coverImageURL"] = coverImageURL }
-        if let audioURL { data["audioURL"] = audioURL }
-        return data
-    }
-
-    static func from(id: String, data: [String: Any]) -> Beat? {
-        guard let title = data["title"] as? String,
-              let beatmakerName = data["beatmakerName"] as? String,
-              let genreRaw = data["genre"] as? String,
-              let genre = BeatGenre(rawValue: genreRaw),
-              let bpm = data["bpm"] as? Int,
-              let keyRaw = data["key"] as? String,
-              let key = MusicalKey(rawValue: keyRaw),
-              let price = data["price"] as? Double,
-              let durationSeconds = data["durationSeconds"] as? Int,
-              let dateAddedTimestamp = data["dateAdded"] as? Double
-        else { return nil }
-
-        return Beat(
-            id: id,
-            title: title,
-            beatmakerName: beatmakerName,
-            uploaderID: data["uploaderID"] as? String ?? "",
-            genre: genre,
-            bpm: bpm,
-            key: key,
-            price: price,
-            priceTON: data["priceTON"] as? Double ?? 0,
-            durationSeconds: durationSeconds,
-            coverImageName: data["coverImageName"] as? String ?? "waveform.circle.fill",
-            coverImageURL: data["coverImageURL"] as? String,
-            audioURL: data["audioURL"] as? String,
-            dateAdded: Date(timeIntervalSince1970: dateAddedTimestamp),
-            purchasedBy: data["purchasedBy"] as? [String] ?? []
-        )
     }
 }

@@ -99,7 +99,7 @@ class BeatStoreManager: ObservableObject {
                         return
                     }
                     self.allBeats = snapshot.documents.compactMap { doc in
-                        Beat.from(id: doc.documentID, data: doc.data())
+                        try? doc.data(as: Beat.self)
                     }
                     self.isLoading = false
                 }
@@ -174,9 +174,8 @@ class BeatStoreManager: ObservableObject {
             uploadProgress = 0.95
         }
 
-        // Create Firestore document
+        // Create Firestore document — id is the document path, not stored in body
         let beat = Beat(
-            id: beatID,
             title: title,
             beatmakerName: beatmakerName,
             uploaderID: userID,
@@ -192,18 +191,19 @@ class BeatStoreManager: ObservableObject {
             dateAdded: Date()
         )
 
-        try await db.collection("beats").document(beatID).setData(beat.firestoreData)
+        try await db.collection("beats").document(beatID).setData(from: beat)
         uploadProgress = 1.0
     }
 
     // MARK: - Purchase Beat
 
     func purchaseBeat(_ beat: Beat) async throws {
+        guard let beatID = beat.id else { return }
         let userID = AuthManager.shared.appleUserID
         guard !userID.isEmpty else { return }
         guard !beat.purchasedBy.contains(userID) else { return }
 
-        try await db.collection("beats").document(beat.id).updateData([
+        try await db.collection("beats").document(beatID).updateData([
             "purchasedBy": FieldValue.arrayUnion([userID])
         ])
     }
@@ -211,14 +211,15 @@ class BeatStoreManager: ObservableObject {
     // MARK: - Delete Beat
 
     func deleteBeat(_ beat: Beat) async throws {
+        guard let beatID = beat.id else { return }
         // Delete files from Storage
-        let beatRef = storage.reference().child("beats/\(beat.id)")
+        let beatRef = storage.reference().child("beats/\(beatID)")
         let items = try await beatRef.listAll()
         for item in items.items {
             try await item.delete()
         }
         // Delete Firestore document
-        try await db.collection("beats").document(beat.id).delete()
+        try await db.collection("beats").document(beatID).delete()
     }
 
     // MARK: - Preview

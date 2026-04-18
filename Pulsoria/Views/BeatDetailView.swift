@@ -449,7 +449,7 @@ struct BeatDetailView: View {
                 fromAddress: tonWallet.walletAddress,
                 toAddress: sellerWallet,
                 expectedAmount: beat.priceTON,
-                beatID: beat.id
+                beatID: beat.id ?? ""
             )
 
             tonPaymentStatus = verified ? .success : .pending
