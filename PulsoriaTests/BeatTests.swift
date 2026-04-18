@@ -92,31 +92,7 @@ struct BeatTests {
         #expect(makeBeat(id: "a") != makeBeat(id: "b"))
     }
 
-    // MARK: - Codable (via Firestore.Encoder/Decoder)
-
-    @Test func firestoreCodableRoundTripPreservesFields() throws {
-        // id is not round-tripped here — @DocumentID is written by the
-        // document *path*, not the body, so Firestore.Encoder strips it
-        // on encode and Firestore.Decoder populates it from the path on
-        // decode. Body-only round trip is what we verify.
-        let original = makeBeat(id: nil, price: 14.50, priceTON: 3, durationSeconds: 200)
-        let encoded = try Firestore.Encoder().encode(original)
-        let decoded = try Firestore.Decoder().decode(Beat.self, from: encoded)
-
-        #expect(decoded.title == original.title)
-        #expect(decoded.beatmakerName == original.beatmakerName)
-        #expect(decoded.uploaderID == original.uploaderID)
-        #expect(decoded.genre == original.genre)
-        #expect(decoded.bpm == original.bpm)
-        #expect(decoded.key == original.key)
-        #expect(decoded.price == original.price)
-        #expect(decoded.priceTON == original.priceTON)
-        #expect(decoded.durationSeconds == original.durationSeconds)
-        #expect(decoded.coverImageName == original.coverImageName)
-        #expect(decoded.purchasedBy == original.purchasedBy)
-        // Date is lossy via Firestore Timestamp (microsecond precision).
-        #expect(abs(decoded.dateAdded.timeIntervalSince1970 - original.dateAdded.timeIntervalSince1970) < 0.001)
-    }
+    // MARK: - Firestore encoding
 
     @Test func firestoreEncoderOmitsDocumentID() throws {
         let beat = makeBeat(id: "beat-x")
@@ -124,6 +100,30 @@ struct BeatTests {
         // @DocumentID must not appear in the document body — it's the document path.
         #expect(dict["id"] == nil)
     }
+
+    @Test func firestoreEncoderIncludesAllBodyFields() throws {
+        let beat = makeBeat(id: nil, price: 14.50, priceTON: 3, durationSeconds: 200)
+        let dict = try Firestore.Encoder().encode(beat)
+
+        #expect(dict["title"] as? String == beat.title)
+        #expect(dict["beatmakerName"] as? String == beat.beatmakerName)
+        #expect(dict["uploaderID"] as? String == beat.uploaderID)
+        #expect(dict["genre"] as? String == beat.genre.rawValue)
+        #expect(dict["bpm"] as? Int == beat.bpm)
+        #expect(dict["key"] as? String == beat.key.rawValue)
+        #expect(dict["price"] as? Double == beat.price)
+        #expect(dict["priceTON"] as? Double == beat.priceTON)
+        #expect(dict["durationSeconds"] as? Int == beat.durationSeconds)
+        #expect(dict["coverImageName"] as? String == beat.coverImageName)
+        #expect(dict["purchasedBy"] as? [String] == beat.purchasedBy)
+        // Date becomes a Firestore Timestamp on encode.
+        #expect(dict["dateAdded"] != nil)
+    }
+
+    // A full Firestore.Decoder round-trip test would require a real
+    // DocumentSnapshot context (because @DocumentID is populated from the
+    // document path, not the body). That is an integration test, not a
+    // unit test — skipped here.
 
     // MARK: - Enums
 
