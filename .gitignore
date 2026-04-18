@@ -36,6 +36,7 @@ fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
 
-# Secrets (double-check: GoogleService-Info.plist is currently tracked)
+# Secrets and Firebase config
+GoogleService-Info.plist
 *.mobileprovision
 *.p12
