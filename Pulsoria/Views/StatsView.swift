@@ -7,7 +7,6 @@ struct StatsView: View {
     @ObservedObject var playlists = PlaylistManager.shared
 
     @State private var selectedSection: StatsSection = .dna
-    @State private var showAchievementDetail: AchievementID? = nil
 
     var isRu: Bool { ThemeManager.shared.language == .russian }
 
