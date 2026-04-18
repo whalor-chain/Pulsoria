@@ -1,3 +1,4 @@
+import OSLog
 import SwiftUI
 
 struct BeatDetailView: View {
@@ -81,7 +82,9 @@ struct BeatDetailView: View {
             if let img = UIImage(data: data) {
                 coverImage = img
             }
-        } catch { }
+        } catch {
+            Logger.beatStore.debug("Cover load failed: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     // MARK: - Background
@@ -411,7 +414,10 @@ struct BeatDetailView: View {
         Task {
             do {
                 try await store.purchaseBeat(beat)
-            } catch { }
+            } catch {
+                Logger.beatStore.error("Purchase failed: \(error.localizedDescription, privacy: .public)")
+                ErrorBannerManager.shared.report(error, fallback: Loc.purchaseFailed)
+            }
             isPurchasing = false
         }
     }

@@ -1,3 +1,4 @@
+import OSLog
 import SwiftUI
 
 struct ShopView: View {
@@ -259,7 +260,9 @@ struct BeatCardView: View {
             if let img = UIImage(data: data) {
                 coverImage = img
             }
-        } catch { }
+        } catch {
+            Logger.beatStore.debug("Cover load failed: \(error.localizedDescription, privacy: .public)")
+        }
     }
 }
 

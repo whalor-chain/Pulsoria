@@ -246,6 +246,8 @@ enum Loc {
     static var importMusic: String { ru ? "Импорт музыки" : "Import Music" }
     static var delete: String { ru ? "Удалить" : "Delete" }
     static var importError: String { ru ? "Ошибка импорта" : "Import Error" }
+    static var errorTitle: String { ru ? "Ошибка" : "Error" }
+    static var purchaseFailed: String { ru ? "Не удалось купить бит. Попробуй ещё раз." : "Couldn't complete purchase. Please try again." }
 
     // Playlists
     static var tracksTab: String { ru ? "Треки" : "Tracks" }

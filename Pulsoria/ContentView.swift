@@ -5,6 +5,7 @@ import Network
 struct ContentView: View {
     @ObservedObject var player = AudioPlayerManager.shared
     @ObservedObject var store = BeatStoreManager.shared
+    @ObservedObject var errorBanner = ErrorBannerManager.shared
     @State private var showPlayer = false
     @State private var showSharedImport = false
     @State private var sharedStagedImports: [StagedImport] = []
@@ -78,6 +79,18 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .sharedAudioImport)) { _ in
             Task { await processSharedFiles() }
+        }
+        .alert(
+            Loc.errorTitle,
+            isPresented: Binding(
+                get: { errorBanner.errorToShow != nil },
+                set: { if !$0 { errorBanner.dismiss() } }
+            ),
+            presenting: errorBanner.errorToShow
+        ) { _ in
+            Button("OK", role: .cancel) { }
+        } message: { err in
+            Text(err.message)
         }
         .animation(.easeInOut(duration: 0.3), value: player.currentTrack?.id)
         .animation(.easeInOut(duration: 0.3), value: isOffline)
