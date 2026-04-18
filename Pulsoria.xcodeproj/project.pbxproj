@@ -14,6 +14,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		DA66AA182F930DBD008DB28C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DAF38C962F841A4300B39FCC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DAF38C9D2F841A4300B39FCC;
+			remoteInfo = Pulsoria;
+		};
 		DA6CFACD2F8BDA66005EBE41 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = DAF38C962F841A4300B39FCC /* Project object */;
@@ -38,6 +45,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		DA66AA142F930DBD008DB28C /* PulsoriaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PulsoriaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DA6CFAC52F8BDA66005EBE41 /* PulsoriaShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PulsoriaShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		DAF38C9E2F841A4300B39FCC /* Pulsoria.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pulsoria.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -60,6 +68,11 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		DA66AA152F930DBD008DB28C /* PulsoriaTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = PulsoriaTests;
+			sourceTree = "<group>";
+		};
 		DA6CFAC62F8BDA66005EBE41 /* PulsoriaShare */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -79,6 +92,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		DA66AA112F930DBD008DB28C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DA6CFAC22F8BDA66005EBE41 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -104,6 +124,7 @@
 			children = (
 				DAF38CA02F841A4300B39FCC /* Pulsoria */,
 				DA6CFAC62F8BDA66005EBE41 /* PulsoriaShare */,
+				DA66AA152F930DBD008DB28C /* PulsoriaTests */,
 				DAF38C9F2F841A4300B39FCC /* Products */,
 			);
 			sourceTree = "<group>";
@@ -113,6 +134,7 @@
 			children = (
 				DAF38C9E2F841A4300B39FCC /* Pulsoria.app */,
 				DA6CFAC52F8BDA66005EBE41 /* PulsoriaShare.appex */,
+				DA66AA142F930DBD008DB28C /* PulsoriaTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -120,6 +142,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		DA66AA132F930DBD008DB28C /* PulsoriaTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DA66AA1A2F930DBD008DB28C /* Build configuration list for PBXNativeTarget "PulsoriaTests" */;
+			buildPhases = (
+				DA66AA102F930DBD008DB28C /* Sources */,
+				DA66AA112F930DBD008DB28C /* Frameworks */,
+				DA66AA122F930DBD008DB28C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DA66AA192F930DBD008DB28C /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				DA66AA152F930DBD008DB28C /* PulsoriaTests */,
+			);
+			name = PulsoriaTests;
+			packageProductDependencies = (
+			);
+			productName = PulsoriaTests;
+			productReference = DA66AA142F930DBD008DB28C /* PulsoriaTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		DA6CFAC42F8BDA66005EBE41 /* PulsoriaShare */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = DA6CFAD32F8BDA66005EBE41 /* Build configuration list for PBXNativeTarget "PulsoriaShare" */;
@@ -179,6 +224,10 @@
 				LastSwiftUpdateCheck = 2640;
 				LastUpgradeCheck = 2640;
 				TargetAttributes = {
+					DA66AA132F930DBD008DB28C = {
+						CreatedOnToolsVersion = 26.4;
+						TestTargetID = DAF38C9D2F841A4300B39FCC;
+					};
 					DA6CFAC42F8BDA66005EBE41 = {
 						CreatedOnToolsVersion = 26.4;
 					};
@@ -206,11 +255,19 @@
 			targets = (
 				DAF38C9D2F841A4300B39FCC /* Pulsoria */,
 				DA6CFAC42F8BDA66005EBE41 /* PulsoriaShare */,
+				DA66AA132F930DBD008DB28C /* PulsoriaTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		DA66AA122F930DBD008DB28C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DA6CFAC32F8BDA66005EBE41 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -228,6 +285,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		DA66AA102F930DBD008DB28C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DA6CFAC12F8BDA66005EBE41 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -245,6 +309,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		DA66AA192F930DBD008DB28C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DAF38C9D2F841A4300B39FCC /* Pulsoria */;
+			targetProxy = DA66AA182F930DBD008DB28C /* PBXContainerItemProxy */;
+		};
 		DA6CFACE2F8BDA66005EBE41 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = DA6CFAC42F8BDA66005EBE41 /* PulsoriaShare */;
@@ -253,6 +322,48 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		DA66AA1B2F930DBD008DB28C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SLMJT7S555;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Wave.PulsoriaTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pulsoria.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pulsoria";
+			};
+			name = Debug;
+		};
+		DA66AA1C2F930DBD008DB28C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SLMJT7S555;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Wave.PulsoriaTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pulsoria.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pulsoria";
+			};
+			name = Release;
+		};
 		DA6CFAD12F8BDA66005EBE41 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -529,6 +640,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		DA66AA1A2F930DBD008DB28C /* Build configuration list for PBXNativeTarget "PulsoriaTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DA66AA1B2F930DBD008DB28C /* Debug */,
+				DA66AA1C2F930DBD008DB28C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		DA6CFAD32F8BDA66005EBE41 /* Build configuration list for PBXNativeTarget "PulsoriaShare" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
