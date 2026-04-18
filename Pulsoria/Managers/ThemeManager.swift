@@ -249,6 +249,23 @@ enum Loc {
     static var errorTitle: String { ru ? "Ошибка" : "Error" }
     static var purchaseFailed: String { ru ? "Не удалось купить бит. Попробуй ещё раз." : "Couldn't complete purchase. Please try again." }
 
+    // Accessibility — playback controls
+    static var a11yPlay: String { ru ? "Воспроизвести" : "Play" }
+    static var a11yPause: String { ru ? "Пауза" : "Pause" }
+    static var a11yNextTrack: String { ru ? "Следующий трек" : "Next track" }
+    static var a11yPreviousTrack: String { ru ? "Предыдущий трек" : "Previous track" }
+    static var a11yAddFavorite: String { ru ? "Добавить в избранное" : "Add to favorites" }
+    static var a11yRemoveFavorite: String { ru ? "Убрать из избранного" : "Remove from favorites" }
+    static var a11yOpenPlayer: String { ru ? "Открыть плеер" : "Open player" }
+    static var a11yCloseSheet: String { ru ? "Закрыть" : "Close" }
+    static var a11yQueue: String { ru ? "Очередь" : "Queue" }
+    static var a11yLyrics: String { ru ? "Текст песни" : "Lyrics" }
+    static var a11yShare: String { ru ? "Поделиться" : "Share" }
+    static var a11ySleepTimer: String { ru ? "Таймер сна" : "Sleep timer" }
+    static var a11yShuffle: String { ru ? "Перемешать" : "Shuffle" }
+    static var a11yRepeat: String { ru ? "Повтор" : "Repeat" }
+    static var a11yMoreOptions: String { ru ? "Ещё" : "More options" }
+
     // Playlists
     static var tracksTab: String { ru ? "Треки" : "Tracks" }
     static var playlists: String { ru ? "Плейлисты" : "Playlists" }

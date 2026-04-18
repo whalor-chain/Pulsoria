@@ -57,6 +57,10 @@ struct MiniPlayerView: View {
                 }
                 .contentShape(Rectangle())
                 .onTapGesture { onTap() }
+                .accessibilityElement(children: .combine)
+                .accessibilityAddTraits(.isButton)
+                .accessibilityLabel(Loc.a11yOpenPlayer)
+                .accessibilityValue("\(player.currentTrack?.title ?? ""), \(player.currentTrack?.artist ?? "")")
 
                 Button {
                     if let track = player.currentTrack {
@@ -68,12 +72,16 @@ struct MiniPlayerView: View {
                         .foregroundStyle(player.currentTrack?.isFavorite == true ? theme.currentTheme.accent : .secondary)
                         .frame(width: 30, height: 30)
                 }
+                .accessibilityLabel(
+                    player.currentTrack?.isFavorite == true ? Loc.a11yRemoveFavorite : Loc.a11yAddFavorite
+                )
 
                 Button { player.togglePlayPause() } label: {
                     Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
                         .font(.title3)
                         .frame(width: 36, height: 36)
                 }
+                .accessibilityLabel(player.isPlaying ? Loc.a11yPause : Loc.a11yPlay)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)

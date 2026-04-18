@@ -116,6 +116,7 @@ struct PlayerView: View {
                                     Image(systemName: "xmark")
                                         .font(.system(size: 14, weight: .semibold))
                                 }
+                                .accessibilityLabel(Loc.a11yCloseSheet)
                             }
                         }
                 }
@@ -359,6 +360,7 @@ struct PlayerView: View {
                             .frame(width: 52, height: 52)
                     }
                     .buttonStyle(.glass)
+                    .accessibilityLabel(Loc.a11yPreviousTrack)
 
                     Button {
                         player.togglePlayPause()
@@ -369,6 +371,7 @@ struct PlayerView: View {
                     }
                     .buttonStyle(.glassProminent)
                     .sensoryFeedback(.impact(flexibility: .soft, intensity: 0.5), trigger: player.isPlaying)
+                    .accessibilityLabel(player.isPlaying ? Loc.a11yPause : Loc.a11yPlay)
 
                     Button {
                         player.nextTrack()
@@ -378,6 +381,7 @@ struct PlayerView: View {
                             .frame(width: 52, height: 52)
                     }
                     .buttonStyle(.glass)
+                    .accessibilityLabel(Loc.a11yNextTrack)
                 }
             }
 
@@ -390,6 +394,7 @@ struct PlayerView: View {
                         .foregroundStyle(player.isSleepTimerActive ? theme.currentTheme.accent : Color.secondary)
                         .frame(width: 44, height: 44)
                 }
+                .accessibilityLabel(Loc.a11ySleepTimer)
 
                 Button {
                     player.toggleShuffle()
@@ -399,6 +404,8 @@ struct PlayerView: View {
                         .foregroundStyle(player.isShuffleOn ? theme.currentTheme.accent : Color.secondary)
                         .frame(width: 44, height: 44)
                 }
+                .accessibilityLabel(Loc.a11yShuffle)
+                .accessibilityValue(player.isShuffleOn ? "on" : "off")
 
                 Button {
                     player.toggleRepeatMode()
@@ -408,6 +415,7 @@ struct PlayerView: View {
                         .foregroundStyle(player.repeatMode == .off ? Color.secondary : theme.currentTheme.accent)
                         .frame(width: 44, height: 44)
                 }
+                .accessibilityLabel(Loc.a11yRepeat)
 
                 Button {
                     showQueue = true
@@ -417,6 +425,7 @@ struct PlayerView: View {
                         .foregroundStyle(!player.queue.isEmpty ? theme.currentTheme.accent : Color.secondary)
                         .frame(width: 44, height: 44)
                 }
+                .accessibilityLabel(Loc.a11yQueue)
 
                 Button {
                     showShareSheet = true
@@ -426,6 +435,7 @@ struct PlayerView: View {
                         .foregroundStyle(Color.secondary)
                         .frame(width: 44, height: 44)
                 }
+                .accessibilityLabel(Loc.a11yShare)
             }
 
             // Favorite button
