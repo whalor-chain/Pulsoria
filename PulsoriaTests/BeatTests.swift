@@ -3,6 +3,7 @@ import Foundation
 import FirebaseFirestore
 @testable import Pulsoria
 
+@MainActor
 struct BeatTests {
 
     // MARK: - Factory
