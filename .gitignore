@@ -1,0 +1,41 @@
+# Claude Code
+.claude/
+
+# Xcode user-specific state
+xcuserdata/
+*.xcuserstate
+*.xcuserstate.lock
+*.xcscmblueprint
+*.xccheckout
+
+# Xcode build output
+build/
+DerivedData/
+*.xcworkspace/xcuserdata/
+
+# Swift Package Manager
+.build/
+Packages/
+Package.pins
+*.xcodeproj/project.xcworkspace/xcuserdata/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# CocoaPods (if ever used)
+Pods/
+
+# Carthage (if ever used)
+Carthage/Build/
+
+# fastlane (if ever used)
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Secrets (double-check: GoogleService-Info.plist is currently tracked)
+*.mobileprovision
+*.p12
