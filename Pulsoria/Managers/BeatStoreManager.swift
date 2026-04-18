@@ -191,7 +191,10 @@ class BeatStoreManager: ObservableObject {
             dateAdded: Date()
         )
 
-        try await db.collection("beats").document(beatID).setData(from: beat)
+        // setData(from:) is a synchronous throws — it encodes and enqueues
+        // the write; Firestore handles the network round trip in the
+        // background with retry/offline semantics.
+        try db.collection("beats").document(beatID).setData(from: beat)
         uploadProgress = 1.0
     }
 
