@@ -77,7 +77,7 @@ struct ContentView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .sharedAudioImport)) { _ in
-            processSharedFiles()
+            Task { await processSharedFiles() }
         }
         .animation(.easeInOut(duration: 0.3), value: player.currentTrack?.id)
         .animation(.easeInOut(duration: 0.3), value: isOffline)
@@ -94,99 +94,91 @@ struct ContentView: View {
         }
     }
 
-    private func processSharedFiles() {
+    @MainActor
+    private func processSharedFiles() async {
         let urls = player.getSharedFiles()
         guard !urls.isEmpty else { return }
 
-        DispatchQueue.global(qos: .userInitiated).async {
-            var staged: [StagedImport] = []
+        var staged: [StagedImport] = []
+        for url in urls {
+            staged.append(await Self.stageImport(from: url))
+        }
 
-            for url in urls {
-                let rawName = url.deletingPathExtension().lastPathComponent
-                var cleaned = rawName.replacingOccurrences(of: "_", with: " ")
-                if let range = cleaned.range(of: #"\s+\d{8,}$"#, options: .regularExpression) {
-                    cleaned.removeSubrange(range)
-                }
-                cleaned = cleaned.replacingOccurrences(of: #"\s*[\(\[].*?[\)\]]"#, with: "", options: .regularExpression)
-                cleaned = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !staged.isEmpty else { return }
+        sharedStagedImports = staged
+        showSharedImport = true
+    }
 
-                let parts = cleaned.components(separatedBy: " - ")
-                let artist = parts.count > 1 ? parts[0].trimmingCharacters(in: .whitespaces) : ""
-                let title = parts.count > 1
-                    ? parts.dropFirst().joined(separator: " - ").trimmingCharacters(in: .whitespaces)
-                    : cleaned
+    nonisolated private static func stageImport(from url: URL) async -> StagedImport {
+        let rawName = url.deletingPathExtension().lastPathComponent
+        var cleaned = rawName.replacingOccurrences(of: "_", with: " ")
+        if let range = cleaned.range(of: #"\s+\d{8,}$"#, options: .regularExpression) {
+            cleaned.removeSubrange(range)
+        }
+        cleaned = cleaned.replacingOccurrences(of: #"\s*[\(\[].*?[\)\]]"#, with: "", options: .regularExpression)
+        cleaned = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
 
-                let fileSize: String
-                if let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
-                   let size = attrs[.size] as? Int64 {
-                    fileSize = String(format: "%.1f MB", Double(size) / 1_048_576)
-                } else {
-                    fileSize = "—"
-                }
+        let parts = cleaned.components(separatedBy: " - ")
+        let artistGuess = parts.count > 1 ? parts[0].trimmingCharacters(in: .whitespaces) : ""
+        let titleGuess = parts.count > 1
+            ? parts.dropFirst().joined(separator: " - ").trimmingCharacters(in: .whitespaces)
+            : cleaned
 
-                let asset = AVURLAsset(url: url)
-                var fileDuration = "0:00"
-                var artworkData: Data? = nil
-                var metaTitle: String? = nil
-                var metaArtist: String? = nil
+        let fileSize: String
+        if let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
+           let size = attrs[.size] as? Int64 {
+            fileSize = String(format: "%.1f MB", Double(size) / 1_048_576)
+        } else {
+            fileSize = "—"
+        }
 
-                let group = DispatchGroup()
-                group.enter()
-                Task.detached(priority: .userInitiated) {
-                    if let dur = try? await asset.load(.duration) {
-                        let sec = CMTimeGetSeconds(dur)
-                        fileDuration = String(format: "%d:%02d", Int(sec) / 60, Int(sec) % 60)
-                    }
-                    if let meta = try? await asset.load(.commonMetadata) {
-                        let titleItems = AVMetadataItem.metadataItems(from: meta, filteredByIdentifier: .commonIdentifierTitle)
-                        if let item = titleItems.first, let str = try? await item.load(.stringValue), !str.isEmpty {
-                            metaTitle = str
-                        }
-                        let artistItems = AVMetadataItem.metadataItems(from: meta, filteredByIdentifier: .commonIdentifierArtist)
-                        if let item = artistItems.first, let str = try? await item.load(.stringValue), !str.isEmpty {
-                            metaArtist = str.replacingOccurrences(of: "/", with: ", ")
-                        }
-                        let artItems = AVMetadataItem.metadataItems(from: meta, filteredByIdentifier: .commonIdentifierArtwork)
-                        if let item = artItems.first, let data = try? await item.load(.dataValue) {
-                            artworkData = data
-                        }
-                    }
-                    let ft = metaTitle ?? title
-                    let fa = metaArtist ?? artist
-                    if artworkData == nil && !ft.isEmpty {
-                        artworkData = await GeniusManager.shared.fetchSongArtworkData(title: ft, artist: fa)
-                    }
-                    group.leave()
-                }
-                group.wait()
+        let asset = AVURLAsset(url: url)
+        var fileDuration = "0:00"
+        var artworkData: Data? = nil
+        var metaTitle: String? = nil
+        var metaArtist: String? = nil
 
-                let finalTitle = metaTitle ?? title
-                let finalArtist = metaArtist ?? artist
-                let foundTitle = metaTitle != nil || parts.count > 1
-                let foundArtist = metaArtist != nil || (parts.count > 1 && !artist.isEmpty)
-
-                staged.append(StagedImport(
-                    sourceURL: url,
-                    title: finalTitle,
-                    artist: finalArtist,
-                    fileExtension: url.pathExtension,
-                    fileSize: fileSize,
-                    fileDuration: fileDuration,
-                    artworkData: artworkData,
-                    foundTitle: foundTitle,
-                    foundArtist: foundArtist,
-                    suggestedTitle: nil,
-                    suggestedArtist: nil
-                ))
+        if let dur = try? await asset.load(.duration) {
+            let sec = CMTimeGetSeconds(dur)
+            fileDuration = String(format: "%d:%02d", Int(sec) / 60, Int(sec) % 60)
+        }
+        if let meta = try? await asset.load(.commonMetadata) {
+            let titleItems = AVMetadataItem.metadataItems(from: meta, filteredByIdentifier: .commonIdentifierTitle)
+            if let item = titleItems.first, let str = try? await item.load(.stringValue), !str.isEmpty {
+                metaTitle = str
             }
-
-            DispatchQueue.main.async {
-                if !staged.isEmpty {
-                    sharedStagedImports = staged
-                    showSharedImport = true
-                }
+            let artistItems = AVMetadataItem.metadataItems(from: meta, filteredByIdentifier: .commonIdentifierArtist)
+            if let item = artistItems.first, let str = try? await item.load(.stringValue), !str.isEmpty {
+                metaArtist = str.replacingOccurrences(of: "/", with: ", ")
+            }
+            let artItems = AVMetadataItem.metadataItems(from: meta, filteredByIdentifier: .commonIdentifierArtwork)
+            if let item = artItems.first, let data = try? await item.load(.dataValue) {
+                artworkData = data
             }
         }
+
+        let finalTitle = metaTitle ?? titleGuess
+        let finalArtist = metaArtist ?? artistGuess
+        if artworkData == nil && !finalTitle.isEmpty {
+            artworkData = await GeniusManager.shared.fetchSongArtworkData(title: finalTitle, artist: finalArtist)
+        }
+
+        let foundTitle = metaTitle != nil || parts.count > 1
+        let foundArtist = metaArtist != nil || (parts.count > 1 && !artistGuess.isEmpty)
+
+        return StagedImport(
+            sourceURL: url,
+            title: finalTitle,
+            artist: finalArtist,
+            fileExtension: url.pathExtension,
+            fileSize: fileSize,
+            fileDuration: fileDuration,
+            artworkData: artworkData,
+            foundTitle: foundTitle,
+            foundArtist: foundArtist,
+            suggestedTitle: nil,
+            suggestedArtist: nil
+        )
     }
 }
 
