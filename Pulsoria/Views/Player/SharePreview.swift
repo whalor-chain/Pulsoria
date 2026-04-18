@@ -204,17 +204,18 @@ enum ShareCardRenderer {
             // Background gradient from palette
             let pal = palette.colors
             let colors = [pal.top.cgColor, pal.mid.cgColor, pal.bottom.cgColor]
-            let gradient = CGGradient(
+            if let gradient = CGGradient(
                 colorsSpace: CGColorSpaceCreateDeviceRGB(),
                 colors: colors as CFArray,
                 locations: [0, 0.5, 1]
-            )!
-            context.drawLinearGradient(
-                gradient,
-                start: CGPoint(x: 0, y: 0),
-                end: CGPoint(x: width, y: height),
-                options: []
-            )
+            ) {
+                context.drawLinearGradient(
+                    gradient,
+                    start: CGPoint(x: 0, y: 0),
+                    end: CGPoint(x: width, y: height),
+                    options: []
+                )
+            }
 
             // Artwork with rounded corners and shadow
             let artSize: CGFloat = 640
@@ -241,17 +242,18 @@ enum ShareCardRenderer {
                     pal.top.withAlphaComponent(0.6).cgColor,
                     pal.mid.withAlphaComponent(0.4).cgColor
                 ]
-                let placeholderGradient = CGGradient(
+                if let placeholderGradient = CGGradient(
                     colorsSpace: CGColorSpaceCreateDeviceRGB(),
                     colors: placeholderColors as CFArray,
                     locations: [0, 1]
-                )!
-                context.drawLinearGradient(
-                    placeholderGradient,
-                    start: artRect.origin,
-                    end: CGPoint(x: artRect.maxX, y: artRect.maxY),
-                    options: []
-                )
+                ) {
+                    context.drawLinearGradient(
+                        placeholderGradient,
+                        start: artRect.origin,
+                        end: CGPoint(x: artRect.maxX, y: artRect.maxY),
+                        options: []
+                    )
+                }
 
                 // Music note
                 let noteFont = UIFont.systemFont(ofSize: 160, weight: .ultraLight)
