@@ -69,7 +69,7 @@ enum UserRole: String, CaseIterable, Codable, Identifiable {
 
 // MARK: - Beat
 
-struct Beat: Identifiable, Equatable, Codable, Hashable {
+struct Beat: Identifiable, Equatable, Hashable {
     @DocumentID var id: String?
     let title: String
     let beatmakerName: String
@@ -142,3 +142,7 @@ struct Beat: Identifiable, Equatable, Codable, Hashable {
         hasher.combine(id)
     }
 }
+
+// Codable declared in an extension so the synthesized conformance is not
+// inferred as MainActor-isolated under Swift 6 strict concurrency.
+extension Beat: Codable {}
