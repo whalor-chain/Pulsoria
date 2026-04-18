@@ -6,23 +6,93 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		DA66A7B42F916C3B008DB28C /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = DA66A7B32F916C3B008DB28C /* FirebaseAuth */; };
+		DA66A7B62F916C3B008DB28C /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = DA66A7B52F916C3B008DB28C /* FirebaseFirestore */; };
+		DA66A7B82F916C3B008DB28C /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = DA66A7B72F916C3B008DB28C /* FirebaseStorage */; };
+		DA6CFACF2F8BDA66005EBE41 /* PulsoriaShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DA6CFAC52F8BDA66005EBE41 /* PulsoriaShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		DA6CFACD2F8BDA66005EBE41 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DAF38C962F841A4300B39FCC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DA6CFAC42F8BDA66005EBE41;
+			remoteInfo = PulsoriaShare;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		DA6CFAD02F8BDA66005EBE41 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				DA6CFACF2F8BDA66005EBE41 /* PulsoriaShare.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		DA6CFAC52F8BDA66005EBE41 /* PulsoriaShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PulsoriaShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		DAF38C9E2F841A4300B39FCC /* Pulsoria.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pulsoria.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		DA6CFAD42F8BDA66005EBE41 /* Exceptions for "PulsoriaShare" folder in "PulsoriaShare" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = DA6CFAC42F8BDA66005EBE41 /* PulsoriaShare */;
+		};
+		DAF38CC22F841E3200B39FCC /* Exceptions for "Pulsoria" folder in "Pulsoria" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = DAF38C9D2F841A4300B39FCC /* Pulsoria */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		DA6CFAC62F8BDA66005EBE41 /* PulsoriaShare */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DA6CFAD42F8BDA66005EBE41 /* Exceptions for "PulsoriaShare" folder in "PulsoriaShare" target */,
+			);
+			path = PulsoriaShare;
+			sourceTree = "<group>";
+		};
 		DAF38CA02F841A4300B39FCC /* Pulsoria */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DAF38CC22F841E3200B39FCC /* Exceptions for "Pulsoria" folder in "Pulsoria" target */,
+			);
 			path = Pulsoria;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		DA6CFAC22F8BDA66005EBE41 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DAF38C9B2F841A4300B39FCC /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DA66A7B42F916C3B008DB28C /* FirebaseAuth in Frameworks */,
+				DA66A7B62F916C3B008DB28C /* FirebaseFirestore in Frameworks */,
+				DA66A7B82F916C3B008DB28C /* FirebaseStorage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -33,6 +103,7 @@
 			isa = PBXGroup;
 			children = (
 				DAF38CA02F841A4300B39FCC /* Pulsoria */,
+				DA6CFAC62F8BDA66005EBE41 /* PulsoriaShare */,
 				DAF38C9F2F841A4300B39FCC /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +112,7 @@
 			isa = PBXGroup;
 			children = (
 				DAF38C9E2F841A4300B39FCC /* Pulsoria.app */,
+				DA6CFAC52F8BDA66005EBE41 /* PulsoriaShare.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,6 +120,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		DA6CFAC42F8BDA66005EBE41 /* PulsoriaShare */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DA6CFAD32F8BDA66005EBE41 /* Build configuration list for PBXNativeTarget "PulsoriaShare" */;
+			buildPhases = (
+				DA6CFAC12F8BDA66005EBE41 /* Sources */,
+				DA6CFAC22F8BDA66005EBE41 /* Frameworks */,
+				DA6CFAC32F8BDA66005EBE41 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				DA6CFAC62F8BDA66005EBE41 /* PulsoriaShare */,
+			);
+			name = PulsoriaShare;
+			packageProductDependencies = (
+			);
+			productName = PulsoriaShare;
+			productReference = DA6CFAC52F8BDA66005EBE41 /* PulsoriaShare.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		DAF38C9D2F841A4300B39FCC /* Pulsoria */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = DAF38CA92F841A4400B39FCC /* Build configuration list for PBXNativeTarget "Pulsoria" */;
@@ -55,16 +149,21 @@
 				DAF38C9A2F841A4300B39FCC /* Sources */,
 				DAF38C9B2F841A4300B39FCC /* Frameworks */,
 				DAF38C9C2F841A4300B39FCC /* Resources */,
+				DA6CFAD02F8BDA66005EBE41 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				DA6CFACE2F8BDA66005EBE41 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				DAF38CA02F841A4300B39FCC /* Pulsoria */,
 			);
 			name = Pulsoria;
 			packageProductDependencies = (
+				DA66A7B32F916C3B008DB28C /* FirebaseAuth */,
+				DA66A7B52F916C3B008DB28C /* FirebaseFirestore */,
+				DA66A7B72F916C3B008DB28C /* FirebaseStorage */,
 			);
 			productName = Pulsoria;
 			productReference = DAF38C9E2F841A4300B39FCC /* Pulsoria.app */;
@@ -80,6 +179,9 @@
 				LastSwiftUpdateCheck = 2640;
 				LastUpgradeCheck = 2640;
 				TargetAttributes = {
+					DA6CFAC42F8BDA66005EBE41 = {
+						CreatedOnToolsVersion = 26.4;
+					};
 					DAF38C9D2F841A4300B39FCC = {
 						CreatedOnToolsVersion = 26.4;
 					};
@@ -94,17 +196,28 @@
 			);
 			mainGroup = DAF38C952F841A4300B39FCC;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				DA66A7B22F916C3B008DB28C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = DAF38C9F2F841A4300B39FCC /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				DAF38C9D2F841A4300B39FCC /* Pulsoria */,
+				DA6CFAC42F8BDA66005EBE41 /* PulsoriaShare */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		DA6CFAC32F8BDA66005EBE41 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DAF38C9C2F841A4300B39FCC /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -115,6 +228,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		DA6CFAC12F8BDA66005EBE41 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DAF38C9A2F841A4300B39FCC /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -124,7 +244,83 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		DA6CFACE2F8BDA66005EBE41 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DA6CFAC42F8BDA66005EBE41 /* PulsoriaShare */;
+			targetProxy = DA6CFACD2F8BDA66005EBE41 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		DA6CFAD12F8BDA66005EBE41 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = PulsoriaShare/PulsoriaShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 11;
+				DEVELOPMENT_TEAM = SLMJT7S555;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PulsoriaShare/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = PulsoriaShare;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Wave.Pulsoria.PulsoriaShare;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		DA6CFAD22F8BDA66005EBE41 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = PulsoriaShare/PulsoriaShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 11;
+				DEVELOPMENT_TEAM = SLMJT7S555;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PulsoriaShare/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = PulsoriaShare;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Wave.Pulsoria.PulsoriaShare;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 		DAF38CA72F841A4400B39FCC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -251,16 +447,22 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Pulsoria/Pulsoria.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 11;
 				DEVELOPMENT_TEAM = SLMJT7S555;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Pulsoria/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Pulsoria;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDarkContent;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -269,12 +471,16 @@
 				PRODUCT_BUNDLE_IDENTIFIER = Wave.Pulsoria;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -283,16 +489,22 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Pulsoria/Pulsoria.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 11;
 				DEVELOPMENT_TEAM = SLMJT7S555;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Pulsoria/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Pulsoria;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDarkContent;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -301,18 +513,31 @@
 				PRODUCT_BUNDLE_IDENTIFIER = Wave.Pulsoria;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		DA6CFAD32F8BDA66005EBE41 /* Build configuration list for PBXNativeTarget "PulsoriaShare" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DA6CFAD12F8BDA66005EBE41 /* Debug */,
+				DA6CFAD22F8BDA66005EBE41 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		DAF38C992F841A4300B39FCC /* Build configuration list for PBXProject "Pulsoria" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -332,6 +557,35 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		DA66A7B22F916C3B008DB28C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.12.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		DA66A7B32F916C3B008DB28C /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DA66A7B22F916C3B008DB28C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		DA66A7B52F916C3B008DB28C /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DA66A7B22F916C3B008DB28C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		DA66A7B72F916C3B008DB28C /* FirebaseStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DA66A7B22F916C3B008DB28C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseStorage;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = DAF38C962F841A4300B39FCC /* Project object */;
 }
