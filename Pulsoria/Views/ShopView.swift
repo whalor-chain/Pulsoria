@@ -43,6 +43,8 @@ struct ShopView: View {
                             }
                         }
                     }
+                    .accessibilityLabel(Loc.connectTonWallet)
+                    .accessibilityValue(tonWallet.isConnected ? tonWallet.formattedBalance : Loc.walletNotConnected)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack(spacing: 12) {
@@ -56,6 +58,8 @@ struct ShopView: View {
                                                  ? theme.currentTheme.accent
                                                  : .secondary)
                         }
+                        .accessibilityLabel(Loc.a11yFilters)
+                        .accessibilityValue(store.hasActiveFilters ? "active" : "none")
 
                         if store.userRole.canUpload {
                             Button {
@@ -64,6 +68,7 @@ struct ShopView: View {
                                 Image(systemName: "plus.circle")
                                     .foregroundStyle(theme.currentTheme.accent)
                             }
+                            .accessibilityLabel(Loc.uploadBeat)
                         }
                     }
                 }

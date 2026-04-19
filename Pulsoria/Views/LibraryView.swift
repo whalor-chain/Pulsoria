@@ -342,6 +342,9 @@ struct LibraryView: View {
                         } label: {
                             Image(systemName: "plus")
                         }
+                        .accessibilityLabel(
+                            libraryMode == .playlists ? Loc.newPlaylist : Loc.a11yImportMusic
+                        )
                     }
                 }
             }

@@ -269,6 +269,13 @@ enum Loc {
     static var a11yShuffle: String { ru ? "Перемешать" : "Shuffle" }
     static var a11yRepeat: String { ru ? "Повтор" : "Repeat" }
     static var a11yMoreOptions: String { ru ? "Ещё" : "More options" }
+    static var a11yProfile: String { ru ? "Профиль" : "Profile" }
+    static var a11yStats: String { ru ? "Статистика" : "Stats" }
+    static var a11ySettings: String { ru ? "Настройки" : "Settings" }
+    static var a11yFilters: String { ru ? "Фильтры" : "Filters" }
+    static var a11yImportMusic: String { ru ? "Импортировать музыку" : "Import music" }
+    static var a11yPreview: String { ru ? "Прослушать превью" : "Preview" }
+    static var a11yStopPreview: String { ru ? "Остановить превью" : "Stop preview" }
 
     // Playlists
     static var tracksTab: String { ru ? "Треки" : "Tracks" }

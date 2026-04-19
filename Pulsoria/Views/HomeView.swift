@@ -60,6 +60,7 @@ struct HomeView: View {
                         }
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(Loc.a11yProfile)
                 }
                 ToolbarItem(placement: .principal) {
                     Image("FullLogo")
@@ -81,6 +82,7 @@ struct HomeView: View {
                                     Image(systemName: "xmark")
                                         .font(.system(size: 14, weight: .semibold))
                                 }
+                                .accessibilityLabel(Loc.a11yCloseSheet)
                             }
                             ToolbarItem(placement: .principal) {
                                 Image("StatsLogo")
@@ -106,6 +108,7 @@ struct HomeView: View {
                                     Image(systemName: "xmark")
                                         .font(.system(size: 14, weight: .semibold))
                                 }
+                                .accessibilityLabel(Loc.a11yCloseSheet)
                             }
                         }
                 }
