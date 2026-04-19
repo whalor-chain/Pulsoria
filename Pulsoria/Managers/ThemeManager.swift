@@ -117,7 +117,10 @@ enum SliderIcon: String, CaseIterable, Identifiable {
         case .tardis: return "door.left.hand.closed"
         case .enterprise: return "airplane.departure"
         case .milleniumFalcon: return "paperplane.fill"
-        case .custom: return ThemeManager.shared.customSliderSymbol.isEmpty ? "star.fill" : ThemeManager.shared.customSliderSymbol
+        // Intentionally static here so sfSymbol stays nonisolated. Callers
+        // that need the user's custom symbol should use
+        // ThemeManager.shared.activeSliderSymbol instead.
+        case .custom: return "star.fill"
         }
     }
 
@@ -166,6 +169,7 @@ enum AppLanguage: String, CaseIterable, Identifiable {
 
 // MARK: - Localization
 
+@MainActor
 enum Loc {
     private static var lang: AppLanguage { ThemeManager.shared.language }
     private static var ru: Bool { lang == .russian }

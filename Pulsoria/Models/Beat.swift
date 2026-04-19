@@ -46,6 +46,7 @@ enum UserRole: String, CaseIterable, Codable, Identifiable {
 
     var id: String { rawValue }
 
+    @MainActor
     var localizedName: String {
         switch self {
         case .listener: return Loc.roleListener

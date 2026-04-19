@@ -18,6 +18,7 @@ enum AppIconVariant: String, CaseIterable, Identifiable {
         }
     }
 
+    @MainActor
     var displayName: String {
         let ru = ThemeManager.shared.language == .russian
         switch self {
