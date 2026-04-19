@@ -72,13 +72,15 @@ enum RoomCode {
     /// Validate a user-entered code: exactly `length` characters, all from
     /// the alphabet. Case-insensitive so callers don't have to uppercase.
     static func isValid(_ code: String) -> Bool {
-        let trimmed = code.trimmingCharacters(in: .whitespaces).uppercased()
+        let trimmed = normalize(code)
         guard trimmed.count == length else { return false }
         return trimmed.allSatisfy { alphabet.contains($0) }
     }
 
     /// Normalize user input into the canonical on-disk form.
+    /// `.whitespacesAndNewlines` — if the user pastes a code copied from
+    /// Messages/WhatsApp it often carries a trailing newline.
     static func normalize(_ code: String) -> String {
-        code.trimmingCharacters(in: .whitespaces).uppercased()
+        code.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
     }
 }
