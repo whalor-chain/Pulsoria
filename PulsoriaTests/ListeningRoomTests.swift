@@ -25,10 +25,15 @@ struct ListeningRoomTests {
     }
 
     @Test func generatedCodesAreTypicallyUnique() {
-        // 32^6 ≈ 1.07B — 500 draws almost never collide. If they do here,
-        // something is wrong with the randomness.
-        let codes = Set((0..<500).map { _ in RoomCode.generate() })
-        #expect(codes.count == 500)
+        // 32^6 ≈ 1.07B possible codes. Birthday-paradox estimate of a
+        // collision in k draws is ~k² / (2·N): at k=500 it's ~0.012%,
+        // enough to bite CI a few times a year; at k=100 it's ~0.0005%,
+        // vanishingly rare — so we only need 100 to smoke-test that
+        // `randomElement()` isn't stuck on one value. A real randomness
+        // regression would show up long before it runs out of the
+        // 1-billion-code space.
+        let codes = Set((0..<100).map { _ in RoomCode.generate() })
+        #expect(codes.count == 100)
     }
 
     // MARK: - RoomCode.isValid / normalize
