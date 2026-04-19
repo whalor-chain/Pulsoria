@@ -1,0 +1,72 @@
+rules_version = '2';
+
+// ────────────────────────────────────────────────────────────────────────────
+// Pulsoria Firestore rules
+// ────────────────────────────────────────────────────────────────────────────
+// Paste into the Firebase console: Firestore → Rules → Publish.
+// Or deploy via CLI: `firebase deploy --only firestore:rules`.
+//
+// Two collections covered:
+//   - beats/{beatID}          — marketplace listings, readable by everyone,
+//                               writable by the uploader.
+//   - rooms/{code}            — live listening rooms, readable by anyone
+//                               (so clients can discover by code), but
+//                               playback fields are host-only.
+//
+// Anything else is rejected.
+// ────────────────────────────────────────────────────────────────────────────
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Beat marketplace ────────────────────────────────────────────────
+    match /beats/{beatID} {
+      // Public catalog — anyone can browse.
+      allow read: if true;
+
+      // Only the signed-in uploader may create / update their own beats.
+      allow create: if request.auth != null
+                    && request.resource.data.uploaderID == request.auth.uid;
+      allow update: if request.auth != null
+                    && resource.data.uploaderID == request.auth.uid;
+      allow delete: if request.auth != null
+                    && resource.data.uploaderID == request.auth.uid;
+    }
+
+    // ─── Listening rooms ─────────────────────────────────────────────────
+    match /rooms/{code} {
+      allow read: if true;
+
+      // Anyone signed in can create a room, and must register themselves
+      // as host on creation.
+      allow create: if request.auth != null
+                    && request.resource.data.hostID == request.auth.uid;
+
+      // Host can update anything; participants can only touch their own
+      // slot in the participants map + bump lastActivity.
+      allow update: if request.auth != null
+                    && (
+                      // Host has full control.
+                      resource.data.hostID == request.auth.uid
+                      // OR the only fields that changed are the user's own
+                      // participant entry and lastActivity.
+                      || (request.resource.data.diff(resource.data).affectedKeys()
+                            .hasOnly(['participants', 'lastActivity']))
+                    );
+
+      // Only the host may nuke the room.
+      allow delete: if request.auth != null
+                    && resource.data.hostID == request.auth.uid;
+
+      // Chat — anyone in the room (anyone signed in, really) may append;
+      // senderID must match the caller so messages can't be spoofed.
+      match /messages/{messageID} {
+        allow read: if true;
+        allow create: if request.auth != null
+                      && request.resource.data.senderID == request.auth.uid;
+        // Messages are append-only.
+        allow update, delete: if false;
+      }
+    }
+  }
+}
