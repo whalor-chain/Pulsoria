@@ -277,6 +277,27 @@ enum Loc {
     static var a11yPreview: String { ru ? "Прослушать превью" : "Preview" }
     static var a11yStopPreview: String { ru ? "Остановить превью" : "Stop preview" }
 
+    // MARK: - Listening Rooms
+    static var rooms: String { ru ? "Комнаты" : "Rooms" }
+    static var listeningRooms: String { ru ? "Комнаты прослушивания" : "Listening Rooms" }
+    static var roomsHint: String { ru ? "Слушайте вместе в реальном времени — один хост, общий плейлист, чат сбоку." : "Listen together live — one host, shared playback, chat on the side." }
+    static var startRoom: String { ru ? "Создать комнату" : "Start a room" }
+    static var joinRoom: String { ru ? "Зайти по коду" : "Join by code" }
+    static var leaveRoom: String { ru ? "Выйти из комнаты" : "Leave room" }
+    static var endRoom: String { ru ? "Закрыть комнату" : "End room" }
+    static var roomCode: String { ru ? "Код комнаты" : "Room code" }
+    static var enterRoomCode: String { ru ? "Введите код" : "Enter code" }
+    static var hostLabel: String { ru ? "Хост" : "Host" }
+    static var pickTrackForRoom: String { ru ? "Выберите трек" : "Pick a track" }
+    static var noLocalTrack: String { ru ? "Этого трека нет у тебя в библиотеке — слышат только хост и те, у кого он есть." : "You don't have this track locally — audio will only play for people who do." }
+    static var roomEndedByHost: String { ru ? "Хост закрыл комнату" : "The host ended this room" }
+    static var shareCode: String { ru ? "Поделиться кодом" : "Share code" }
+    static var participants: String { ru ? "Участники" : "Participants" }
+    static var chat: String { ru ? "Чат" : "Chat" }
+    static var writeMessage: String { ru ? "Написать сообщение…" : "Write a message…" }
+    static var send: String { ru ? "Отправить" : "Send" }
+    static var noMessagesYet: String { ru ? "Сообщений пока нет" : "No messages yet" }
+
     // Playlists
     static var tracksTab: String { ru ? "Треки" : "Tracks" }
     static var playlists: String { ru ? "Плейлисты" : "Playlists" }
