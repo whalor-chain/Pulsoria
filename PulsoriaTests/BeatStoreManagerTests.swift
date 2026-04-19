@@ -201,9 +201,10 @@ struct BeatStoreManagerTests {
             makeBeat(id: "c", price: 30, purchasedBy: ["me"]),
             makeBeat(id: "d", price: 100, purchasedBy: ["other"])
         ]
+        let expectedSpent: Double = 9.99 + 15.0 + 30.0
         withStore(beats: beats, userID: "me") { store in
             #expect(store.totalPurchasesCount == 3)
-            #expect(abs(store.totalSpentAmount - (9.99 + 15 + 30)) < 0.0001)
+            #expect(abs(store.totalSpentAmount - expectedSpent) < 0.0001)
         }
     }
 
@@ -214,9 +215,13 @@ struct BeatStoreManagerTests {
             makeBeat(id: "s2", uploaderID: "seller", price: 5, purchasedBy: ["d"]),
             makeBeat(id: "external", uploaderID: "someoneElse", price: 100, purchasedBy: ["x"])
         ]
+        // Pre-compute the expected earnings outside the closure so the
+        // type checker does not have to unify Double/Int literals inside
+        // a captured expression (Xcode 26 times out otherwise).
+        let expectedEarnings: Double = 10.0 * 3 + 5.0 * 1
         withStore(beats: beats, userID: "seller") { store in
             #expect(store.totalSalesCount == 4) // 3 + 1
-            #expect(abs(store.totalEarnedAmount - (10 * 3 + 5 * 1)) < 0.0001)
+            #expect(abs(store.totalEarnedAmount - expectedEarnings) < 0.0001)
             #expect(store.uploadedBeatsCount == 2)
         }
     }
