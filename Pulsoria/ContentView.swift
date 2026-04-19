@@ -23,6 +23,14 @@ struct ContentView: View {
                     LibraryView()
                 }
 
+                Tab(Loc.rooms, systemImage: "person.2.wave.2.fill") {
+                    NavigationStack {
+                        RoomsEntryView()
+                            .navigationTitle(Loc.listeningRooms)
+                            .navigationBarTitleDisplayMode(.inline)
+                    }
+                }
+
                 if store.userRole != .listener {
                     Tab(Loc.shop, systemImage: "bag.fill") {
                         ShopView()
