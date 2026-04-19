@@ -38,7 +38,9 @@ class TonWalletManager: ObservableObject {
     @Published var isLoadingBalance: Bool = false
     @Published var connectionError: String? = nil
 
-    private let db = Firestore.firestore()
+    // Lazy so the singleton can be constructed without Firebase configured
+    // (e.g. on CI). Matches the pattern in BeatStoreManager.
+    private lazy var db = Firestore.firestore()
     
     
     private var session: TonConnectSession?

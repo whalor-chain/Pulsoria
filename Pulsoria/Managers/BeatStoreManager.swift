@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import FirebaseCore
 import FirebaseFirestore
 import FirebaseStorage
 
@@ -28,9 +29,17 @@ class BeatStoreManager: ObservableObject {
     @Published var isPreviewPlaying: Bool = false
 
     private var previewTimer: Timer?
-    private let db = Firestore.firestore()
-    private let storage = Storage.storage()
+    // Firestore/Storage are looked up lazily so constructing the singleton
+    // never crashes when Firebase isn't configured (e.g. on CI with no
+    // GoogleService-Info.plist). See also: AppDelegate gates
+    // FirebaseApp.configure() on the presence of the plist.
+    private lazy var db = Firestore.firestore()
+    private lazy var storage = Storage.storage()
     private var listener: ListenerRegistration?
+
+    /// True when FirebaseApp has been configured — proxies for
+    /// "Firestore/Storage calls are safe to make."
+    private var isFirebaseReady: Bool { FirebaseApp.app() != nil }
 
     // MARK: - Computed
 
@@ -78,7 +87,9 @@ class BeatStoreManager: ObservableObject {
     private init() {
         let roleRaw = UserDefaults.standard.string(forKey: UserDefaultsKey.userRole) ?? "Listener"
         self.userRole = UserRole(rawValue: roleRaw) ?? .listener
-        startListening()
+        if isFirebaseReady {
+            startListening()
+        }
     }
 
     deinit {
