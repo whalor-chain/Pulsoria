@@ -7,6 +7,7 @@ struct AppearanceView: View {
     var body: some View {
         List {
             themeSection
+            playerSection
             appIconSection
             sliderIconSection
         }
@@ -14,6 +15,23 @@ struct AppearanceView: View {
         .navigationTitle(Loc.appearance)
         .sheet(isPresented: $showSymbolPicker) {
             SFSymbolPickerSheet()
+        }
+    }
+
+    // MARK: - Player Background
+
+    private var playerSection: some View {
+        Section {
+            Toggle(isOn: $theme.useCoverGradient) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(Loc.coverGradient)
+                        .font(.custom(Loc.fontMedium, size: 15))
+                    Text(Loc.coverGradientHint)
+                        .font(.custom(Loc.fontMedium, size: 12))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .tint(theme.currentTheme.accent)
         }
     }
 

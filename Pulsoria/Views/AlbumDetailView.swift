@@ -20,8 +20,7 @@ struct AlbumDetailView: View {
                 albumInfo
 
                 if isLoading {
-                    ProgressView()
-                        .padding(.top, 20)
+                    trackListSkeleton
                 } else {
                     favoriteButton
                     actionButtons
@@ -234,6 +233,42 @@ struct AlbumDetailView: View {
             .scaleEffect(isFavorite ? 1.05 : 1.0)
         }
         .sensoryFeedback(.impact, trigger: isFavorite)
+    }
+
+    // MARK: - Track List Skeleton
+
+    /// Placeholder rows shown while the album metadata + track list
+    /// load from Genius / local scan. Silhouette matches `trackList`:
+    /// 24 pt number stub, 40×40 artwork stub, title + artist stubs.
+    private var trackListSkeleton: some View {
+        VStack(spacing: 14) {
+            ForEach(0..<6, id: \.self) { _ in
+                HStack(spacing: 14) {
+                    Skeleton(cornerRadius: 3)
+                        .frame(width: 14, height: 12)
+
+                    Skeleton(cornerRadius: 6)
+                        .frame(width: 40, height: 40)
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Skeleton(cornerRadius: 3)
+                            .frame(height: 13)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .scaleEffect(x: 0.85, y: 1, anchor: .leading)
+                        Skeleton(cornerRadius: 3)
+                            .frame(height: 10)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .scaleEffect(x: 0.55, y: 1, anchor: .leading)
+                    }
+
+                    Skeleton(cornerRadius: 3)
+                        .frame(width: 34, height: 10)
+                }
+                .padding(.vertical, 6)
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 12)
     }
 
     // MARK: - Track List

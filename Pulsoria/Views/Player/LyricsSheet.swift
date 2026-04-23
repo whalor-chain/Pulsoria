@@ -6,20 +6,29 @@ struct LyricsSheet: View {
     let lyrics: String
     let trackTitle: String
     let artistName: String
+    /// Palette-driven tint pair, injected by PlayerView so the sheet
+    /// background matches the current cover when cover-gradient is on.
+    /// Defaults to nil → falls back to theme.
+    var tintAccent: Color? = nil
+    var tintSecondary: Color? = nil
+
     @ObservedObject var player = AudioPlayerManager.shared
     @ObservedObject var theme = ThemeManager.shared
     @Environment(\.dismiss) private var dismiss
     @State private var isDragging = false
     @State private var dragValue: TimeInterval = 0
 
+    private var accent: Color { tintAccent ?? theme.currentTheme.accent }
+    private var secondary: Color { tintSecondary ?? theme.currentTheme.secondary }
+
     var body: some View {
         NavigationStack {
             ZStack {
                 LinearGradient(
                     colors: [
-                        theme.currentTheme.accent.opacity(0.6),
-                        theme.currentTheme.secondary.opacity(0.4),
-                        theme.currentTheme.accent.opacity(0.25),
+                        accent.opacity(0.6),
+                        secondary.opacity(0.4),
+                        accent.opacity(0.25),
                         Color(.systemBackground).opacity(0.3)
                     ],
                     startPoint: .topLeading,
@@ -129,6 +138,7 @@ struct LyricsSheet: View {
                     } label: {
                         Image(systemName: "xmark")
                             .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.white)
                     }
                 }
             }
@@ -164,10 +174,21 @@ struct LyricsSheet: View {
 // MARK: - Lyrics Loading Animation
 
 struct LyricsLoadingView: View {
-    @ObservedObject var theme = ThemeManager.shared
-    @State private var pulse = false
+    /// Palette-driven tint pair for the card background. Defaults to
+    /// theme so existing call-sites keep working; PlayerView passes
+    /// `activeAccent` / `activeSecondary` to match the cover palette.
+    var tintAccent: Color? = nil
+    var tintSecondary: Color? = nil
 
-    private let lineWidths: [CGFloat] = [0.9, 0.7, 0.85, 0.6]
+    @ObservedObject var theme = ThemeManager.shared
+
+    private var accent: Color { tintAccent ?? theme.currentTheme.accent }
+    private var secondary: Color { tintSecondary ?? theme.currentTheme.secondary }
+
+    /// Line-by-line width fractions — mimics real lyrics where each
+    /// line is a different length, so the skeleton reads as "lyrics
+    /// are about to appear" instead of "generic loading block".
+    private let lineWidths: [CGFloat] = [0.9, 0.72, 0.86, 0.6]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -178,9 +199,6 @@ struct LyricsLoadingView: View {
                     .font(.custom(Loc.fontBold, size: 13))
                     .tracking(0.5)
                 Spacer()
-                ProgressView()
-                    .tint(.white.opacity(0.4))
-                    .scaleEffect(0.8)
             }
             .foregroundStyle(.white.opacity(0.5))
             .textCase(.uppercase)
@@ -190,17 +208,10 @@ struct LyricsLoadingView: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 ForEach(0..<4, id: \.self) { i in
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(.white.opacity(pulse ? 0.15 : 0.06))
+                    Skeleton(cornerRadius: 6, fill: .white.opacity(0.18))
                         .frame(height: i == 0 ? 22 : 16)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .scaleEffect(x: lineWidths[i], y: 1, anchor: .leading)
-                        .animation(
-                            .easeInOut(duration: 1.0)
-                                .repeatForever(autoreverses: true)
-                                .delay(Double(i) * 0.15),
-                            value: pulse
-                        )
                 }
             }
             .padding(.horizontal, 18)
@@ -211,8 +222,8 @@ struct LyricsLoadingView: View {
                 .fill(
                     LinearGradient(
                         colors: [
-                            theme.currentTheme.accent.opacity(0.35),
-                            theme.currentTheme.secondary.opacity(0.25)
+                            accent.opacity(0.35),
+                            secondary.opacity(0.25)
                         ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
@@ -220,6 +231,5 @@ struct LyricsLoadingView: View {
                 )
         )
         .clipShape(RoundedRectangle(cornerRadius: 20))
-        .onAppear { pulse = true }
     }
 }

@@ -3,9 +3,13 @@ import SwiftUI
 /// Top-level rooms surface. When the user is already in a room, shows the
 /// live room view. Otherwise offers Start/Join actions.
 struct RoomsEntryView: View {
+    /// Owned by `SocialHubView` so the matching toolbar `+` lives in
+    /// the picker's animation context (smooth in/out on segment
+    /// change). The empty-state CTA flips this binding too.
+    @Binding var showCreate: Bool
+
     @ObservedObject var rooms = ListeningRoomManager.shared
     @ObservedObject var theme = ThemeManager.shared
-    @State private var showCreate = false
     @State private var showJoin = false
 
     var body: some View {
@@ -15,9 +19,6 @@ struct RoomsEntryView: View {
             } else {
                 emptyState
             }
-        }
-        .sheet(isPresented: $showCreate) {
-            CreateRoomSheet()
         }
         .sheet(isPresented: $showJoin) {
             JoinRoomSheet()
@@ -62,6 +63,7 @@ struct RoomsEntryView: View {
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "plus.circle.fill")
+                            .symbolEffect(.bounce, value: showCreate)
                         Text(Loc.startRoom)
                             .font(.custom(Loc.fontBold, size: 16))
                     }
@@ -76,6 +78,7 @@ struct RoomsEntryView: View {
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "arrow.right.circle")
+                            .symbolEffect(.bounce, value: showJoin)
                         Text(Loc.joinRoom)
                             .font(.custom(Loc.fontMedium, size: 16))
                     }

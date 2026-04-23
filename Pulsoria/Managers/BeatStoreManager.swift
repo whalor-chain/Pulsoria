@@ -226,14 +226,19 @@ class BeatStoreManager: ObservableObject {
 
     func deleteBeat(_ beat: Beat) async throws {
         guard let beatID = beat.id else { return }
-        // Delete files from Storage
-        let beatRef = storage.reference().child("beats/\(beatID)")
-        let items = try await beatRef.listAll()
-        for item in items.items {
-            try await item.delete()
-        }
-        // Delete Firestore document
+        // Delete the Firestore document FIRST — it's the source of
+        // truth the UI reads off. The `onBeatDeleted` Cloud Function
+        // then fans out to clean up Storage. If the Storage delete here
+        // fails, the beat still disappears from the listing and the
+        // Function's best-effort cleanup catches the orphaned audio.
         try await db.collection("beats").document(beatID).delete()
+
+        let beatRef = storage.reference().child("beats/\(beatID)")
+        if let items = try? await beatRef.listAll() {
+            for item in items.items {
+                try? await item.delete()
+            }
+        }
     }
 
     // MARK: - Preview

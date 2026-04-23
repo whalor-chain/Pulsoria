@@ -298,6 +298,45 @@ enum Loc {
     static var send: String { ru ? "Отправить" : "Send" }
     static var noMessagesYet: String { ru ? "Сообщений пока нет" : "No messages yet" }
 
+    // MARK: - Social / Friends
+    static var social: String { ru ? "Социальное" : "Social" }
+    static var friends: String { ru ? "Друзья" : "Friends" }
+    static var addFriend: String { ru ? "Добавить друга" : "Add friend" }
+    static var myFriendCode: String { ru ? "Мой код" : "My code" }
+    static var copyCode: String { ru ? "Скопировать" : "Copy" }
+    static var codeCopied: String { ru ? "Скопировано" : "Copied" }
+    static var friendCodePrompt: String { ru ? "Введите код друга" : "Enter friend's code" }
+    static var friendCodeHint: String { ru ? "6 символов — друг делится им из своего профиля." : "6 characters — your friend shares theirs from their profile." }
+    static var noFriendsYet: String { ru ? "Пока никого нет" : "No friends yet" }
+    static var noFriendsHint: String { ru ? "Добавьте друга по коду, чтобы видеть что он сейчас слушает." : "Add a friend by code to see what they're listening to." }
+    static var liveNow: String { ru ? "В эфире" : "Live" }
+    static var lastListened: String { ru ? "Последнее" : "Last played" }
+    static var offlineStatus: String { ru ? "Не в сети" : "Offline" }
+    static var removeFriend: String { ru ? "Удалить из друзей" : "Remove friend" }
+    static var friendAdded: String { ru ? "Друг добавлен" : "Friend added" }
+    static var requestSent: String { ru ? "Запрос отправлен" : "Request sent" }
+    static var incomingRequests: String { ru ? "Входящие запросы" : "Friend requests" }
+    static var pendingOutgoing: String { ru ? "Ожидают ответа" : "Pending" }
+    static var accept: String { ru ? "Принять" : "Accept" }
+    static var decline: String { ru ? "Отклонить" : "Decline" }
+    static var cancelRequest: String { ru ? "Отменить запрос" : "Cancel request" }
+    static var wantsToBeFriend: String { ru ? "хочет добавить в друзья" : "wants to add you" }
+    static var requestAlreadySent: String { ru ? "Запрос уже отправлен" : "Request already sent" }
+    static var inRoomNow: String { ru ? "Сейчас в комнате" : "In a room now" }
+    static var joinTheirRoom: String { ru ? "Зайти в комнату" : "Join their room" }
+    static var searchFriends: String { ru ? "Поиск друзей" : "Search friends" }
+    static var currentTrack: String { ru ? "Сейчас играет" : "Now playing" }
+    static var notListening: String { ru ? "Ничего не слушает" : "Not listening" }
+    static var scanQR: String { ru ? "Сканировать QR" : "Scan QR" }
+    static var notFoundQR: String { ru ? "Это не код Pulsoria" : "That QR isn't a Pulsoria friend code." }
+    static var cameraPermissionTitle: String { ru ? "Нет доступа к камере" : "Camera access needed" }
+    static var cameraPermissionMessage: String { ru ? "Разрешите камеру в Настройках, чтобы сканировать QR-коды друзей." : "Allow camera access in Settings to scan friends' QR codes." }
+    static var openSettings: String { ru ? "Настройки" : "Open Settings" }
+    static var justNow: String { ru ? "только что" : "just now" }
+    static var minutesAgoSuffix: String { ru ? "мин назад" : "min ago" }
+    static var hoursAgoSuffix: String { ru ? "ч назад" : "h ago" }
+    static var daysAgoSuffix: String { ru ? "дн назад" : "d ago" }
+
     // Playlists
     static var tracksTab: String { ru ? "Треки" : "Tracks" }
     static var playlists: String { ru ? "Плейлисты" : "Playlists" }
@@ -385,6 +424,31 @@ enum Loc {
     static var sliderIcon: String { ru ? "Иконка ползунка" : "Slider Icon" }
     static var current: String { ru ? "Текущая" : "Current" }
     static var sliderIconHint: String { ru ? "Выберите иконку, которая будет ехать по полосе прогресса" : "Choose an icon that rides along the progress bar while music plays" }
+    static var coverGradient: String { ru ? "Градиент из обложки" : "Cover Gradient" }
+    static var coverGradientHint: String {
+        ru
+            ? "Фон плеера подстраивается под цвета обложки текущего трека"
+            : "Player background adapts to the colours of the current cover art"
+    }
+
+    // Reactions + activity feed
+    static var reactToTrack: String {
+        ru ? "Реакция на трек" : "React to track"
+    }
+    static var reactionsInbox: String {
+        ru ? "Реакции" : "Reactions"
+    }
+    static var noReactionsYet: String {
+        ru ? "Пока нет реакций" : "No reactions yet"
+    }
+    static var noReactionsHint: String {
+        ru
+            ? "Когда друзья реагируют на твою музыку, они появятся здесь"
+            : "When friends react to your music, they'll show up here"
+    }
+    static var reactedTo: String {
+        ru ? "отреагировал на" : "reacted to"
+    }
 
     // Appearance modes
     static var systemMode: String { ru ? "Система" : "System" }
@@ -579,6 +643,13 @@ class ThemeManager: ObservableObject {
         didSet { UserDefaults.standard.set(language.rawValue, forKey: UserDefaultsKey.appLanguage) }
     }
 
+    /// When true, PlayerView's background is driven by a palette
+    /// extracted from the current cover art (animated MeshGradient).
+    /// Off by default — keeps the static theme gradient.
+    @Published var useCoverGradient: Bool {
+        didSet { UserDefaults.standard.set(useCoverGradient, forKey: UserDefaultsKey.useCoverGradient) }
+    }
+
     private init() {
         let themeRaw = UserDefaults.standard.string(forKey: UserDefaultsKey.appTheme) ?? "Purple"
         self.currentTheme = AppTheme(rawValue: themeRaw) ?? .purple
@@ -592,5 +663,7 @@ class ThemeManager: ObservableObject {
 
         let langRaw = UserDefaults.standard.string(forKey: UserDefaultsKey.appLanguage) ?? "en"
         self.language = AppLanguage(rawValue: langRaw) ?? .english
+
+        self.useCoverGradient = UserDefaults.standard.bool(forKey: UserDefaultsKey.useCoverGradient)
     }
 }

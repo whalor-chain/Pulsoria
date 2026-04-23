@@ -5,6 +5,12 @@ struct MiniPlayerView: View {
     @ObservedObject var theme = ThemeManager.shared
     var onTap: () -> Void = {}
 
+    /// Decoded cover cached across renders — `UIImage(data:)` ran inline
+    /// in `body` on every progressTimer tick (4 Hz), which was ~10 ms
+    /// of main-thread work per tick. Caching removes the decode from
+    /// the hot path.
+    @State private var cover: UIImage?
+
     private var progress: Double {
         guard player.duration > 0 else { return 0 }
         return player.currentTime / player.duration
@@ -43,14 +49,16 @@ struct MiniPlayerView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 8))
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(player.currentTrack?.title ?? "")
-                            .font(.custom(Loc.fontMedium, size: 15))
-                            .lineLimit(1)
+                        MarqueeText(
+                            text: player.currentTrack?.title ?? "",
+                            font: .custom(Loc.fontMedium, size: 15)
+                        )
 
-                        Text(player.currentTrack?.artist ?? "")
-                            .font(.custom(Loc.fontMedium, size: 12))
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
+                        MarqueeText(
+                            text: player.currentTrack?.artist ?? "",
+                            font: .custom(Loc.fontMedium, size: 12)
+                        )
+                        .foregroundStyle(.secondary)
                     }
 
                     Spacer()
@@ -71,6 +79,8 @@ struct MiniPlayerView: View {
                         .font(.body)
                         .foregroundStyle(player.currentTrack?.isFavorite == true ? theme.currentTheme.accent : .secondary)
                         .frame(width: 30, height: 30)
+                        .contentTransition(.symbolEffect(.replace))
+                        .symbolEffect(.bounce, value: player.currentTrack?.isFavorite)
                 }
                 .accessibilityLabel(
                     player.currentTrack?.isFavorite == true ? Loc.a11yRemoveFavorite : Loc.a11yAddFavorite
@@ -80,6 +90,7 @@ struct MiniPlayerView: View {
                     Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
                         .font(.title3)
                         .frame(width: 36, height: 36)
+                        .contentTransition(.symbolEffect(.replace.downUp))
                 }
                 .accessibilityLabel(player.isPlaying ? Loc.a11yPause : Loc.a11yPlay)
             }
@@ -93,13 +104,33 @@ struct MiniPlayerView: View {
                 await player.loadArtwork(for: track)
             }
         }
+        // Decode the cover once per track name. Polls a few times so we
+        // catch late-arriving Genius artwork after the initial play.
+        .task(id: player.currentTrack?.fileName) {
+            await hydrateCover()
+        }
+    }
+
+    private func hydrateCover() async {
+        let fn = player.currentTrack?.fileName
+        if let fn, let data = player.artworkCache[fn], let img = UIImage(data: data) {
+            cover = img
+            return
+        }
+        cover = nil
+        for _ in 0..<15 {
+            try? await Task.sleep(nanoseconds: 200_000_000)
+            if Task.isCancelled { return }
+            if let fn, let data = player.artworkCache[fn], let img = UIImage(data: data) {
+                cover = img
+                return
+            }
+        }
     }
 
     @ViewBuilder
     private var trackArtwork: some View {
-        if let fileName = player.currentTrack?.fileName,
-           let data = player.artworkCache[fileName],
-           let uiImage = UIImage(data: data) {
+        if let uiImage = cover {
             Image(uiImage: uiImage)
                 .resizable()
                 .aspectRatio(contentMode: .fill)

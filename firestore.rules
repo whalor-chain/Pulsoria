@@ -6,12 +6,19 @@ rules_version = '2';
 // Paste into the Firebase console: Firestore → Rules → Publish.
 // Or deploy via CLI: `firebase deploy --only firestore:rules`.
 //
-// Two collections covered:
+// Collections covered:
 //   - beats/{beatID}          — marketplace listings, readable by everyone,
 //                               writable by the uploader.
 //   - rooms/{code}            — live listening rooms, readable by anyone
 //                               (so clients can discover by code), but
 //                               playback fields are host-only.
+//   - users/{userID}          — per-user profile + presence (now-playing +
+//                               friends list). Public read so friends can
+//                               watch each other, owner-only write.
+//   - friendCodes/{code}      — reverse index: short 6-char code → uid so
+//                               users can be added without knowing the raw
+//                               Firebase UID. Public read, immutable once
+//                               claimed by its uid.
 //
 // Anything else is rejected.
 // ────────────────────────────────────────────────────────────────────────────
@@ -20,17 +27,44 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ─── Beat marketplace ────────────────────────────────────────────────
+    //
+    // `price` (USD) and `priceTON` must be non-negative finite numbers
+    // in a sane range so a buggy / hostile client can't submit
+    // `price: -100` (free money) or `price: 1e308` (DoS).
+    function validBeatPrice() {
+      return request.resource.data.price is number
+             && request.resource.data.price >= 0
+             && request.resource.data.price <= 10000
+             && request.resource.data.priceTON is number
+             && request.resource.data.priceTON >= 0
+             && request.resource.data.priceTON <= 100000;
+    }
+
     match /beats/{beatID} {
       // Public catalog — anyone can browse.
       allow read: if true;
 
       // Only the signed-in uploader may create / update their own beats.
       allow create: if request.auth != null
-                    && request.resource.data.uploaderID == request.auth.uid;
+                    && request.resource.data.uploaderID == request.auth.uid
+                    && validBeatPrice();
       allow update: if request.auth != null
-                    && resource.data.uploaderID == request.auth.uid;
+                    && resource.data.uploaderID == request.auth.uid
+                    && validBeatPrice();
       allow delete: if request.auth != null
                     && resource.data.uploaderID == request.auth.uid;
+    }
+
+    // ─── Purchase ledger ─────────────────────────────────────────────────
+    // Doc id = TON transaction hash, guaranteeing idempotency — the
+    // same tx can never fund two purchases. Written *only* by the
+    // `verifyAndRecordPurchase` Cloud Function (admin SDK bypasses
+    // these rules). Clients can read their own purchases.
+    match /purchases/{txHash} {
+      allow read: if request.auth != null
+                  && (resource.data.buyerUID == request.auth.uid
+                      || resource.data.sellerUID == request.auth.uid);
+      allow create, update, delete: if false;
     }
 
     // ─── Listening rooms ─────────────────────────────────────────────────
@@ -67,6 +101,102 @@ service cloud.firestore {
         // Messages are append-only.
         allow update, delete: if false;
       }
+    }
+
+    // ─── User profiles & presence ────────────────────────────────────────
+    match /users/{userID} {
+      // Public — friends read each other's presence and display name.
+      allow read: if true;
+      // Only the user themselves can write their own profile/presence.
+      allow create, update, delete: if request.auth != null
+                                    && request.auth.uid == userID;
+    }
+
+    // ─── Friend code reverse index ───────────────────────────────────────
+    match /friendCodes/{code} {
+      // Anyone can look up a code → uid (that's the whole point).
+      allow read: if true;
+      // Creating a code claims it for your uid. Codes are immutable once
+      // claimed so nobody can steal another user's handle.
+      allow create: if request.auth != null
+                    && request.resource.data.uid == request.auth.uid;
+      allow update: if false;
+      // Only the owner can relinquish their code.
+      allow delete: if request.auth != null
+                    && resource.data.uid == request.auth.uid;
+    }
+
+    // ─── Friend requests (pending, pre-acceptance) ───────────────────────
+    // Doc id = "{from}_{to}" so duplicate requests can't pile up. Deleting
+    // the doc is what both accept and decline do; accept additionally
+    // writes a friendship doc below.
+    match /friendRequests/{requestID} {
+      allow read: if request.auth != null
+                  && (request.auth.uid == resource.data.from
+                      || request.auth.uid == resource.data.to);
+      allow create: if request.auth != null
+                    && request.resource.data.from == request.auth.uid
+                    && request.resource.data.from != request.resource.data.to;
+      // Requests are immutable — accept/decline just deletes.
+      allow update: if false;
+      allow delete: if request.auth != null
+                    && (request.auth.uid == resource.data.from
+                        || request.auth.uid == resource.data.to);
+    }
+
+    // ─── Mutual friendships ──────────────────────────────────────────────
+    // Doc id = two uids joined with "_" in lexicographic order, so both
+    // sides can derive it. `members` holds both uids so queries (array-
+    // contains) work. Either member can unfriend by deleting.
+    match /friendships/{pairID} {
+      allow read: if request.auth != null
+                  && (request.auth.uid in resource.data.members);
+      allow create: if request.auth != null
+                    && (request.auth.uid in request.resource.data.members)
+                    && request.resource.data.members.size() == 2
+                    && request.resource.data.members[0] != request.resource.data.members[1];
+      allow update: if false;
+      allow delete: if request.auth != null
+                    && (request.auth.uid in resource.data.members);
+    }
+
+    // ─── Music reactions (emoji to a friend's now-playing) ───────────────
+    // Sender writes a single doc with their UID + the friend's UID +
+    // the emoji + a snapshot of what the friend was listening to. The
+    // recipient's client picks it up via a `toUID == myUID` query.
+    //
+    // Validation: emoji must be one of the whitelisted glyphs; sender
+    // identity must match auth; sender ≠ recipient. Mutual-friendship
+    // check happens in Cloud Functions / client UX (we don't have a
+    // single-doc shape that lets a rule cheaply confirm friendship,
+    // and faking presence is gated by the public-read user model).
+    match /reactions/{reactionID} {
+      function validReaction() {
+        return request.resource.data.fromUID == request.auth.uid
+               && request.resource.data.toUID is string
+               && request.resource.data.toUID != request.auth.uid
+               && request.resource.data.emoji in ['🔥', '💎', '😭', '🎯', '❓']
+               && request.resource.data.trackTitle is string
+               && request.resource.data.trackTitle.size() <= 200
+               && request.resource.data.trackArtist is string
+               && request.resource.data.trackArtist.size() <= 200
+               && request.resource.data.fileName is string
+               && request.resource.data.fileName.size() <= 200;
+      }
+
+      // Either party may read their own reactions.
+      allow read: if request.auth != null
+                  && (request.auth.uid == resource.data.fromUID
+                      || request.auth.uid == resource.data.toUID);
+
+      allow create: if request.auth != null && validReaction();
+
+      // Reactions are immutable — sender can delete their own (unsend),
+      // recipient can dismiss (also via delete).
+      allow update: if false;
+      allow delete: if request.auth != null
+                    && (request.auth.uid == resource.data.fromUID
+                        || request.auth.uid == resource.data.toUID);
     }
   }
 }

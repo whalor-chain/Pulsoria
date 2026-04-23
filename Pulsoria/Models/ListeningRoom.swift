@@ -42,6 +42,11 @@ struct RoomPlaybackState: Codable, Equatable, Hashable {
     /// paused. Nil while playing.
     var pausedOffset: Double?
     var isPlaying: Bool
+    /// Firebase Storage download URL for the current track. The host uploads
+    /// the audio file on room create / track switch so clients that don't
+    /// own the file locally can still stream along in sync. Nil while the
+    /// upload is in flight or on the rare bucket-less configuration.
+    var streamURL: String? = nil
 }
 
 // MARK: - Chat

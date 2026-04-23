@@ -72,6 +72,11 @@ class AuthManager: ObservableObject {
     // MARK: - Sign Out
 
     func signOut() {
+        // Tear down live Firestore listeners + presence writes first —
+        // otherwise they keep running under the previous uid and the
+        // next user on the device would briefly see old data.
+        FriendsManager.shared.stop()
+
         isSignedIn = false
         userName = ""
         userEmail = ""

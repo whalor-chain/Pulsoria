@@ -40,3 +40,7 @@ fastlane/test_output
 GoogleService-Info.plist
 *.mobileprovision
 *.p12
+
+# App secrets — real values live in AppSecrets.plist which stays
+# gitignored; `AppSecrets.example.plist` is checked in as a template.
+AppSecrets.plist

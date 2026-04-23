@@ -1,0 +1,65 @@
+rules_version = '2';
+
+// ────────────────────────────────────────────────────────────────────────────
+// Pulsoria Firebase Storage rules
+// ────────────────────────────────────────────────────────────────────────────
+// Paste into the Firebase console: Storage → Rules → Publish.
+// Or deploy via CLI: `firebase deploy --only storage`.
+//
+// Three prefixes covered:
+//   - beats/{beatID}/*   — marketplace audio + cover images, public read,
+//                          authenticated write with 30 MB size cap.
+//   - rooms/{code}/*     — listening-room track audio uploaded by the host
+//                          so participants without a local copy can stream.
+//                          Public read, authenticated write with 30 MB cap.
+//   - users/{uid}/*      — profile avatar + now-playing cover thumbnails.
+//                          Public read, write only by the uid owner with
+//                          5 MB cap (covers) / 2 MB cap (avatar).
+//
+// Size limits protect quota from a malicious or buggy client uploading
+// huge files. The app downscales before upload anyway, so the ceiling
+// is well above normal.
+// ────────────────────────────────────────────────────────────────────────────
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    match /beats/{beatID}/{file=**} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.resource.size < 30 * 1024 * 1024;
+    }
+
+    match /rooms/{code}/{file=**} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.resource.size < 30 * 1024 * 1024;
+    }
+
+    // Avatar lives at `users/{uid}/avatar.jpg`. Strictest cap — avatars
+    // are thumbnails, 2 MB is already generous.
+    match /users/{userID}/avatar.jpg {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.auth.uid == userID
+                   && request.resource.size < 2 * 1024 * 1024;
+    }
+
+    // Now-playing cover thumbnails the client uploads for each unique
+    // local track. 5 MB cap — typical embedded artwork is ~100 KB.
+    match /users/{userID}/covers/{file=**} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.auth.uid == userID
+                   && request.resource.size < 5 * 1024 * 1024;
+    }
+
+    // Catch-all for any other file under users/ (future-proof).
+    match /users/{userID}/{file=**} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.auth.uid == userID
+                   && request.resource.size < 5 * 1024 * 1024;
+    }
+  }
+}

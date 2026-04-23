@@ -12,9 +12,18 @@ struct ArtistSelection: Identifiable {
 struct ArtistCard: View {
     let track: Track
     var onArtistTap: (String) -> Void
+    /// Accent pair — defaults to nil so callers outside PlayerView
+    /// get the theme-driven look. PlayerView passes its palette-aware
+    /// `activeAccent` / `activeSecondary` so the stroke + placeholder
+    /// avatar gradient re-skin per album when cover-gradient is on.
+    var tintAccent: Color? = nil
+    var tintSecondary: Color? = nil
     @ObservedObject var player = AudioPlayerManager.shared
     @ObservedObject var theme = ThemeManager.shared
     @ObservedObject var genius = GeniusManager.shared
+
+    private var accent: Color { tintAccent ?? theme.currentTheme.accent }
+    private var secondary: Color { tintSecondary ?? theme.currentTheme.secondary }
 
     private var artists: [String] {
         track.artist
@@ -65,7 +74,7 @@ struct ArtistCard: View {
                 Circle()
                     .strokeBorder(
                         LinearGradient(
-                            colors: [theme.currentTheme.accent.opacity(0.6), theme.currentTheme.secondary.opacity(0.3)],
+                            colors: [accent.opacity(0.6), secondary.opacity(0.3)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ),
@@ -118,7 +127,7 @@ struct ArtistCard: View {
             Circle()
                 .fill(
                     LinearGradient(
-                        colors: [theme.currentTheme.accent.opacity(0.5), theme.currentTheme.secondary.opacity(0.3)],
+                        colors: [accent.opacity(0.5), secondary.opacity(0.3)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )

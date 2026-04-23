@@ -75,6 +75,9 @@ struct ProfileEditorSheet: View {
                         nickname = editedNickname.trimmingCharacters(in: .whitespaces)
                         profileImage = editedImage
                         SettingsView.saveProfileImage(editedImage)
+                        // Push the new name + avatar to Firestore/Storage
+                        // so friends see the update on their next snapshot.
+                        FriendsManager.shared.refreshMyProfile()
                         dismiss()
                     } label: {
                         Image(systemName: "checkmark")

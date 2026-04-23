@@ -26,8 +26,7 @@ struct ArtistPageView: View {
                 // Genius info
                 if genius.hasToken {
                     if genius.isLoading {
-                        ProgressView()
-                            .padding()
+                        geniusSkeletonSection
                     } else {
                         if let info = genius.artistInfo {
                             geniusInfoSection(info: info)
@@ -188,6 +187,47 @@ struct ArtistPageView: View {
         .frame(width: 100)
         .padding(.vertical, 12)
         .glassEffect(.regular, in: .rect(cornerRadius: 14))
+    }
+
+    // MARK: - Genius Skeleton
+
+    /// Placeholder for the Genius bio + song-info blocks. Matches
+    /// the real section's silhouette (two glass cards, one with a
+    /// 6-line bio, one with a short song description) so the
+    /// transition to real data doesn't shift the page.
+    private var geniusSkeletonSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Skeleton(cornerRadius: 4)
+                .frame(width: 120, height: 18)
+                .padding(.leading, 4)
+
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(0..<5, id: \.self) { i in
+                    Skeleton(cornerRadius: 4)
+                        .frame(height: 12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .scaleEffect(x: [1.0, 0.92, 0.96, 0.85, 0.6][i], y: 1, anchor: .leading)
+                }
+            }
+            .padding(14)
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
+
+            Skeleton(cornerRadius: 4)
+                .frame(width: 140, height: 18)
+                .padding(.leading, 4)
+                .padding(.top, 8)
+
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(0..<3, id: \.self) { i in
+                    Skeleton(cornerRadius: 4)
+                        .frame(height: 12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .scaleEffect(x: [0.95, 0.8, 0.55][i], y: 1, anchor: .leading)
+                }
+            }
+            .padding(14)
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
+        }
     }
 
     // MARK: - Genius Info

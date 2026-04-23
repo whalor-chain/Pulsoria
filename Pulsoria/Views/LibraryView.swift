@@ -151,7 +151,9 @@ struct LibraryView: View {
                 ForEach(LibraryMode.allCases, id: \.self) { mode in
                     let isSelected = libraryMode == mode
                     Button {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                        // Softer spring (matches SocialHub picker) so
+                        // the glass pill glides between modes.
+                        withAnimation(.spring(response: 0.5, dampingFraction: 0.88)) {
                             libraryMode = mode
                         }
                     } label: {
@@ -170,6 +172,10 @@ struct LibraryView: View {
                         )
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
+                        // Lock tap area before the glass clipping so
+                        // the outer capsule's rounded corners don't
+                        // nibble into the hit rectangle at the edges.
+                        .contentShape(.rect)
                         .glassEffect(
                             isSelected
                                 ? .regular.tint(theme.currentTheme.accent.opacity(0.2)).interactive()
@@ -236,7 +242,10 @@ struct LibraryView: View {
                         playlistList
                     }
                 }
-                .animation(.easeInOut(duration: 0.3), value: libraryMode)
+                // Same spring as the picker pill (response 0.5,
+                // damping 0.88) — pill-glide and content cross-fade
+                // share one curve so they read as one gesture.
+                .animation(.spring(response: 0.5, dampingFraction: 0.88), value: libraryMode)
             }
             .safeAreaInset(edge: .top) {
                 VStack(spacing: 0) {
@@ -535,7 +544,9 @@ struct LibraryView: View {
                     var sugTitle: String? = nil
                     var sugArtist: String? = nil
                     let skipSuggestion = metaTitle != nil && metaArtist != nil
-                    let geniusToken = "gB3kEDDXSGWhF9CKBO9DaKvkjTsgJ41GxFYbAnEOIwgJd0AqckDNyqc6amq7_yhR"
+                    // Token comes from `AppSecrets.plist` (gitignored) —
+                    // old hardcoded literal was rotated out in Apr 2026.
+                    let geniusToken = AppSecrets.geniusToken
                     let searchQuery = "\(finalTitle) \(finalArtist)".trimmingCharacters(in: .whitespaces)
                     let sugGroup = DispatchGroup()
                     sugGroup.enter()
