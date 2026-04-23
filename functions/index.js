@@ -217,6 +217,24 @@ exports.verifyAndRecordPurchase = onCall({ cors: true }, async (request) => {
     throw new HttpsError("failed-precondition", "Can't buy your own beat.");
   }
 
+  // Verify the caller actually owns `fromAddress`. Without this,
+  // an attacker could feed us someone else's wallet address + a
+  // real tx from that wallet to the seller — and we'd credit the
+  // *attacker's* uid with the purchase, stealing the beat. Only
+  // the authenticated user's own wallet (per userPrivate/{uid})
+  // may be used as the payment source.
+  const buyerPriv = await db.collection("userPrivate").doc(auth.uid).get();
+  const buyerWallet = buyerPriv.exists ? buyerPriv.get("tonWallet") : null;
+  if (typeof buyerWallet !== "string" || !buyerWallet) {
+    throw new HttpsError("failed-precondition", "Connect your TON wallet in Pulsoria first.");
+  }
+  if (buyerWallet !== fromAddress) {
+    throw new HttpsError(
+      "permission-denied",
+      "Payment address doesn't match your connected wallet."
+    );
+  }
+
   // Prefer the beat's own snapshotted sellerWallet (public, scoped to
   // this listing). Fallback: legacy public `users/{uploaderID}.tonWallet`
   // for pre-existing beats, then `userPrivate/{uploaderID}.tonWallet`
