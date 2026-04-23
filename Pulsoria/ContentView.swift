@@ -6,6 +6,7 @@ struct ContentView: View {
     @ObservedObject var store = BeatStoreManager.shared
     @ObservedObject var errorBanner = ErrorBannerManager.shared
     @ObservedObject var network = NetworkMonitor.shared
+    @ObservedObject var friends = FriendsManager.shared
     @State private var showPlayer = false
     @State private var showSharedImport = false
     @State private var sharedStagedImports: [StagedImport] = []
@@ -19,16 +20,25 @@ struct ContentView: View {
                     HomeView()
                 }
 
+                Tab(Loc.social, systemImage: "person.2.crop.square.stack.fill") {
+                    NavigationStack {
+                        SocialHubView()
+                            .navigationBarTitleDisplayMode(.inline)
+                            .toolbar {
+                                ToolbarItem(placement: .principal) {
+                                    Image("SocialLogo")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(height: 52)
+                                        .accessibilityLabel(Loc.social)
+                                }
+                            }
+                    }
+                }
+                .badge(friends.incomingRequests.count)
+
                 Tab(Loc.library, systemImage: "music.note.square.stack") {
                     LibraryView()
-                }
-
-                Tab(Loc.rooms, systemImage: "person.2.wave.2.fill") {
-                    NavigationStack {
-                        RoomsEntryView()
-                            .navigationTitle(Loc.listeningRooms)
-                            .navigationBarTitleDisplayMode(.inline)
-                    }
                 }
 
                 if store.userRole != .listener {
@@ -53,11 +63,15 @@ struct ContentView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
 
-                if player.currentTrack != nil {
-                    MiniPlayerView(onTap: {
-                        showPlayer = true
-                    })
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                if player.currentTrack != nil && !showPlayer {
+                    MiniPlayerView(
+                        onTap: {
+                            withAnimation(.smooth(duration: 0.35)) {
+                                showPlayer = true
+                            }
+                        }
+                    )
+                    .transition(.opacity)
                 }
 
                 Color.clear
@@ -65,12 +79,20 @@ struct ContentView: View {
                     .allowsHitTesting(false)
             }
         }
-        .ignoresSafeArea(.keyboard)
-        .sheet(isPresented: $showPlayer) {
-            PlayerView()
-                .presentationDragIndicator(.hidden)
-                .presentationDetents([.large])
+        .overlay {
+            if showPlayer {
+                PlayerView(
+                    onDismiss: {
+                        withAnimation(.smooth(duration: 0.35)) {
+                            showPlayer = false
+                        }
+                    }
+                )
+                .transition(.opacity)
+                .zIndex(5)
+            }
         }
+        .ignoresSafeArea(.keyboard)
         .sheet(isPresented: $showSharedImport) {
             ImportReviewSheet(stagedImports: $sharedStagedImports) {
                 for item in sharedStagedImports {
@@ -103,6 +125,13 @@ struct ContentView: View {
         .animation(.easeInOut(duration: 0.3), value: network.isOffline)
         .animation(.smooth(duration: 0.3), value: theme.language)
         .animation(.smooth(duration: 0.3), value: store.userRole)
+        // Brings the friends + presence layer online once we're past the
+        // sign-in gate. `start()` is idempotent, so firing it on every
+        // appear is safe.
+        .task {
+            FriendsManager.shared.start()
+            PushNotificationManager.shared.start()
+        }
     }
 
     @MainActor
@@ -196,3 +225,4 @@ struct ContentView: View {
 #Preview {
     ContentView()
 }
+

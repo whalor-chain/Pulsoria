@@ -7,6 +7,7 @@ struct ListeningRoomView: View {
     @ObservedObject var theme = ThemeManager.shared
     @State private var chatInput: String = ""
     @State private var showLeaveConfirm = false
+    @State private var showTrackPicker = false
     @FocusState private var chatFocused: Bool
 
     var body: some View {
@@ -53,6 +54,20 @@ struct ListeningRoomView: View {
                  : (theme.language == .russian
                     ? "Выйти из комнаты?"
                     : "Leave this room?"))
+        }
+        .sheet(isPresented: $showTrackPicker) {
+            HostTrackPickerSheet()
+        }
+        // Keep the room in sync with the host's local player — if the
+        // host auto-advances (end-of-track) or manually jumps to another
+        // track outside the picker, push that to Firestore so listeners
+        // follow along.
+        .onChange(of: player.currentTrack) { _, newTrack in
+            guard rooms.isHost,
+                  let newTrack,
+                  let room = rooms.currentRoom,
+                  newTrack.fileName != room.playback.trackFileName else { return }
+            Task { try? await rooms.hostSwitchTrack(to: newTrack) }
         }
     }
 
@@ -111,11 +126,23 @@ struct ListeningRoomView: View {
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                     if !hasMatchingLocalTrack(fileName: room.playback.trackFileName) && !rooms.isHost {
-                        Text(Loc.noLocalTrack)
-                            .font(.custom(Loc.fontMedium, size: 11))
-                            .foregroundStyle(.orange)
-                            .lineLimit(2)
-                            .padding(.top, 2)
+                        if room.playback.streamURL != nil {
+                            Text(theme.language == .russian
+                                 ? "Стрим от хоста"
+                                 : "Streaming from host")
+                                .font(.custom(Loc.fontMedium, size: 11))
+                                .foregroundStyle(theme.currentTheme.accent)
+                                .lineLimit(1)
+                                .padding(.top, 2)
+                        } else {
+                            Text(theme.language == .russian
+                                 ? "Загружается у хоста…"
+                                 : "Host is uploading…")
+                                .font(.custom(Loc.fontMedium, size: 11))
+                                .foregroundStyle(.orange)
+                                .lineLimit(2)
+                                .padding(.top, 2)
+                        }
                     }
                 }
                 Spacer()
@@ -153,6 +180,7 @@ struct ListeningRoomView: View {
             } label: {
                 Image(systemName: "play.fill")
                     .frame(width: 48, height: 48)
+                    .symbolEffect(.bounce, value: player.isPlaying)
             }
             .buttonStyle(.glass)
             .accessibilityLabel(Loc.a11yPlay)
@@ -165,9 +193,19 @@ struct ListeningRoomView: View {
             } label: {
                 Image(systemName: "pause.fill")
                     .frame(width: 48, height: 48)
+                    .symbolEffect(.bounce, value: player.isPlaying)
             }
             .buttonStyle(.glass)
             .accessibilityLabel(Loc.a11yPause)
+
+            Button {
+                showTrackPicker = true
+            } label: {
+                Image(systemName: "music.note.list")
+                    .frame(width: 48, height: 48)
+            }
+            .buttonStyle(.glass)
+            .accessibilityLabel(theme.language == .russian ? "Сменить трек" : "Change track")
 
             Spacer()
         }

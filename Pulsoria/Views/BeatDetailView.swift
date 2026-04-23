@@ -279,6 +279,7 @@ struct BeatDetailView: View {
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: isPreviewingThis ? "stop.fill" : "play.fill")
+                            .contentTransition(.symbolEffect(.replace.downUp))
                         Text(isPreviewingThis ? Loc.stopPreview : Loc.preview)
                             .font(.custom(Loc.fontMedium, size: 15))
                     }
@@ -305,6 +306,7 @@ struct BeatDetailView: View {
                 GlassEffectContainer {
                     HStack(spacing: 10) {
                         Image(systemName: "checkmark.circle.fill")
+                            .symbolEffect(.bounce, options: .nonRepeating, value: isPurchased)
                         Text(Loc.purchased)
                             .font(.custom(Loc.fontBold, size: 17))
                     }

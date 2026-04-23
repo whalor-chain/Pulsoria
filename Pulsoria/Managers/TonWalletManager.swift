@@ -2,6 +2,7 @@ import SwiftUI
 import Combine
 import CryptoKit
 import FirebaseFirestore
+import FirebaseFunctions
 
 // MARK: - TON Connect Session
 
@@ -47,7 +48,9 @@ class TonWalletManager: ObservableObject {
     private var bridgeTask: Task<Void, Never>?
     private var activeBridgeUrl = "https://bridge.tonapi.io/bridge"
 
-    private let manifestUrl = "https://raw.githubusercontent.com/whalor-chain/pulsoria--ton--connect/refs/heads/main/tonconnect-manifest.json"
+    // Manifest is served by our own Cloud Function (`tonconnectManifest`)
+    // so we don't have a single-point-of-failure at raw.githubusercontent.com.
+    private let manifestUrl = "https://us-central1-pulsoria-685c8.cloudfunctions.net/tonconnectManifest"
     private let tonkeeperBridge = "https://bridge.tonapi.io/bridge"
     private let telegramBridge = "https://walletbot.me/tonconnect-bridge/bridge"
 
@@ -71,23 +74,42 @@ class TonWalletManager: ObservableObject {
     }
 
     // MARK: - Session Persistence
+    //
+    // Session blob (includes the Curve25519 private key used for the
+    // TonConnect bridge channel) lives in the Keychain. Pre-April-2026
+    // builds persisted this in UserDefaults — `loadSession` migrates
+    // any legacy blob into the Keychain on first run, then wipes the
+    // UserDefaults copy.
 
     private func loadSession() {
-        if let data = UserDefaults.standard.data(forKey: UserDefaultsKey.tonConnectSession),
+        if let data = KeychainStore.data(forKey: UserDefaultsKey.tonConnectSession),
            let saved = try? JSONDecoder().decode(TonConnectSession.self, from: data) {
-            session = saved
-            if let addr = saved.walletAddress, !addr.isEmpty {
-                walletAddress = addr
-                isConnected = true
-                Task { await fetchBalance() }
-            }
+            applyLoadedSession(saved)
+            return
+        }
+
+        // Legacy migration path — one-shot.
+        if let legacy = UserDefaults.standard.data(forKey: UserDefaultsKey.tonConnectSession),
+           let saved = try? JSONDecoder().decode(TonConnectSession.self, from: legacy) {
+            KeychainStore.set(legacy, forKey: UserDefaultsKey.tonConnectSession)
+            UserDefaults.standard.removeObject(forKey: UserDefaultsKey.tonConnectSession)
+            applyLoadedSession(saved)
+        }
+    }
+
+    private func applyLoadedSession(_ saved: TonConnectSession) {
+        session = saved
+        if let addr = saved.walletAddress, !addr.isEmpty {
+            walletAddress = addr
+            isConnected = true
+            Task { await fetchBalance() }
         }
     }
 
     private func saveSession() {
         guard let session else { return }
         if let data = try? JSONEncoder().encode(session) {
-            UserDefaults.standard.set(data, forKey: UserDefaultsKey.tonConnectSession)
+            KeychainStore.set(data, forKey: UserDefaultsKey.tonConnectSession)
         }
     }
 
@@ -348,6 +370,7 @@ class TonWalletManager: ObservableObject {
 
         UserDefaults.standard.removeObject(forKey: UserDefaultsKey.tonWalletAddress)
         UserDefaults.standard.removeObject(forKey: UserDefaultsKey.tonConnectSession)
+        KeychainStore.remove(forKey: UserDefaultsKey.tonConnectSession)
 
         let userID = AuthManager.shared.appleUserID
         if !userID.isEmpty {
@@ -418,35 +441,33 @@ class TonWalletManager: ObservableObject {
     }
 
     // MARK: - Verify Transaction
-
-    func verifyTransaction(fromAddress: String, toAddress: String, expectedAmount: Double, beatID: String) async -> Bool {
+    //
+    // All verification + recording happens server-side in the
+    // `verifyAndRecordPurchase` Cloud Function. Client only passes the
+    // beat ID + sender address; the Function looks up the seller's
+    // wallet, scans toncenter for a matching recent transaction, and
+    // transactionally writes `purchases/{txHash}` + updates the beat
+    // doc via admin SDK (the buyer can't hit those writes directly —
+    // Firestore rules block the path).
+    func verifyTransaction(
+        fromAddress: String,
+        toAddress: String, // kept for call-site compat; server derives the real seller address
+        expectedAmount: Double,
+        beatID: String
+    ) async -> Bool {
+        let functions = Functions.functions()
+        let callable = functions.httpsCallable("verifyAndRecordPurchase")
         do {
-            let urlStr = "https://toncenter.com/api/v2/getTransactions?address=\(toAddress)&limit=10"
-            guard let url = URL(string: urlStr) else { return false }
-            let (data, _) = try await URLSession.shared.data(from: url)
-
-            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let result = json["result"] as? [[String: Any]] else { return false }
-
-            let expectedNano = Int64(expectedAmount * 1_000_000_000)
-            let tolerance: Int64 = 10_000_000
-
-            for tx in result {
-                guard let inMsg = tx["in_msg"] as? [String: Any],
-                      let source = inMsg["source"] as? String,
-                      let valueStr = inMsg["value"] as? String,
-                      let value = Int64(valueStr) else { continue }
-
-                if source == fromAddress && abs(value - expectedNano) < tolerance {
-                    let userID = AuthManager.shared.appleUserID
-                    try await db.collection("beats").document(beatID).updateData([
-                        "purchasedBy": FieldValue.arrayUnion([userID])
-                    ])
-                    return true
-                }
+            let result = try await callable.call([
+                "beatID": beatID,
+                "fromAddress": fromAddress
+            ])
+            if let dict = result.data as? [String: Any], dict["ok"] as? Bool == true {
+                return true
             }
             return false
         } catch {
+            connectionError = error.localizedDescription
             return false
         }
     }

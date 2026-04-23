@@ -56,9 +56,17 @@ class GeniusManager: ObservableObject {
     @Published var isLoadingLyrics = false
 
 
-    let token = "gB3kEDDXSGWhF9CKBO9DaKvkjTsgJ41GxFYbAnEOIwgJd0AqckDNyqc6amq7_yhR"
+    /// Genius API access token, loaded from `AppSecrets.plist`. Rotated
+    /// out of source in Apr 2026 — old literal token was public and
+    /// usable by anyone with a repo clone.
+    ///
+    /// `nonisolated` because `AppSecrets.geniusToken` is itself a pure
+    /// static read, and several request helpers in this file are
+    /// marked `nonisolated` (they don't touch MainActor state) — they
+    /// need to read `token` too.
+    nonisolated var token: String { AppSecrets.geniusToken }
 
-    var hasToken: Bool { true }
+    nonisolated var hasToken: Bool { !token.isEmpty }
 
     private let baseURL = "https://api.genius.com"
 

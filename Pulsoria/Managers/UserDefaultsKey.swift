@@ -15,6 +15,7 @@ enum UserDefaultsKey {
     static let customSliderSymbol = "customSliderSymbol"
     static let appLanguage = "appLanguage"
     static let recentSliderSymbols = "recentSliderSymbols"
+    static let useCoverGradient = "useCoverGradient"
 
     // MARK: - Auth (Sign in with Apple)
     static let appleUserID = "appleUserID"

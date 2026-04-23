@@ -10,6 +10,8 @@
 		DA66A7B42F916C3B008DB28C /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = DA66A7B32F916C3B008DB28C /* FirebaseAuth */; };
 		DA66A7B62F916C3B008DB28C /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = DA66A7B52F916C3B008DB28C /* FirebaseFirestore */; };
 		DA66A7B82F916C3B008DB28C /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = DA66A7B72F916C3B008DB28C /* FirebaseStorage */; };
+		DA66AB182F96F13C008DB28C /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = DA66AB172F96F13C008DB28C /* FirebaseMessaging */; };
+		DA66AB222F97AFB3008DB28C /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = DA66AB212F97AFB3008DB28C /* FirebaseFunctions */; };
 		DA6CFACF2F8BDA66005EBE41 /* PulsoriaShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DA6CFAC52F8BDA66005EBE41 /* PulsoriaShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -110,7 +112,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DA66AB182F96F13C008DB28C /* FirebaseMessaging in Frameworks */,
 				DA66A7B42F916C3B008DB28C /* FirebaseAuth in Frameworks */,
+				DA66AB222F97AFB3008DB28C /* FirebaseFunctions in Frameworks */,
 				DA66A7B62F916C3B008DB28C /* FirebaseFirestore in Frameworks */,
 				DA66A7B82F916C3B008DB28C /* FirebaseStorage in Frameworks */,
 			);
@@ -119,12 +123,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		DA66AB162F96F13C008DB28C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		DAF38C952F841A4300B39FCC = {
 			isa = PBXGroup;
 			children = (
 				DAF38CA02F841A4300B39FCC /* Pulsoria */,
 				DA6CFAC62F8BDA66005EBE41 /* PulsoriaShare */,
 				DA66AA152F930DBD008DB28C /* PulsoriaTests */,
+				DA66AB162F96F13C008DB28C /* Frameworks */,
 				DAF38C9F2F841A4300B39FCC /* Products */,
 			);
 			sourceTree = "<group>";
@@ -209,6 +221,8 @@
 				DA66A7B32F916C3B008DB28C /* FirebaseAuth */,
 				DA66A7B52F916C3B008DB28C /* FirebaseFirestore */,
 				DA66A7B72F916C3B008DB28C /* FirebaseStorage */,
+				DA66AB172F96F13C008DB28C /* FirebaseMessaging */,
+				DA66AB212F97AFB3008DB28C /* FirebaseFunctions */,
 			);
 			productName = Pulsoria;
 			productReference = DAF38C9E2F841A4300B39FCC /* Pulsoria.app */;
@@ -567,6 +581,8 @@
 				INFOPLIST_FILE = Pulsoria/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Pulsoria;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Pulsoria uses the camera to scan friends' QR codes.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Pulsoria needs access to save share cards to your photo library";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -609,6 +625,8 @@
 				INFOPLIST_FILE = Pulsoria/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Pulsoria;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Pulsoria uses the camera to scan friends' QR codes.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Pulsoria needs access to save share cards to your photo library";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -704,6 +722,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = DA66A7B22F916C3B008DB28C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseStorage;
+		};
+		DA66AB172F96F13C008DB28C /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DA66A7B22F916C3B008DB28C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+		DA66AB212F97AFB3008DB28C /* FirebaseFunctions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DA66A7B22F916C3B008DB28C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFunctions;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

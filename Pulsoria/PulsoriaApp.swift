@@ -1,5 +1,8 @@
 import SwiftUI
 import FirebaseCore
+import FirebaseAuth
+import FirebaseMessaging
+import OSLog
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
@@ -9,8 +12,35 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // skip configuration in that case so the test host can still boot.
         if Bundle.main.url(forResource: "GoogleService-Info", withExtension: "plist") != nil {
             FirebaseApp.configure()
+            // Firestore rules require `request.auth != null` for every write
+            // into `beats` and `rooms`. Apple Sign-In gives us an identity
+            // for the UI, but the Firestore backend only trusts Firebase Auth,
+            // so we pair every install with an anonymous Firebase session.
+            if Auth.auth().currentUser == nil {
+                Auth.auth().signInAnonymously(completion: nil)
+            }
         }
         return true
+    }
+
+    // MARK: - APNs → FCM bridge
+    //
+    // FirebaseMessaging's method swizzling *should* handle these for us,
+    // but swizzling occasionally misses on certain Xcode / SDK combos —
+    // implementing them explicitly removes the ambiguity and lets us see
+    // in logs exactly when (or whether) APNs hands us a token.
+
+    func application(_ application: UIApplication,
+                     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        Messaging.messaging().apnsToken = deviceToken
+        Logger.beatStore.info("APNs token received bytes=\(deviceToken.count, privacy: .public)")
+    }
+
+    func application(_ application: UIApplication,
+                     didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        Logger.beatStore.error(
+            "APNs registration failed: \(error.localizedDescription, privacy: .public)"
+        )
     }
 }
 

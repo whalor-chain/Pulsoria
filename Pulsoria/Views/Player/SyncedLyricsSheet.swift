@@ -7,21 +7,33 @@ struct SyncedLyricsSheet: View {
     let lines: [SyncedLyricLine]
     let trackTitle: String
     let artistName: String
+    /// Palette-driven tint pair, injected by PlayerView so the sheet
+    /// background matches the current cover when cover-gradient is on.
+    /// Defaults to nil → falls back to theme.
+    var tintAccent: Color? = nil
+    var tintSecondary: Color? = nil
+
     @ObservedObject var player: AudioPlayerManager
     @ObservedObject var theme = ThemeManager.shared
     @Environment(\.dismiss) private var dismiss
     @State private var currentLineIndex: Int = 0
     @State private var isDragging = false
     @State private var dragValue: TimeInterval = 0
+    /// Decoded cover cached so the mini-bar doesn't re-decode JPEG on
+    /// every `updateCurrentLine` timer tick (≥ 6 Hz).
+    @State private var cachedCover: UIImage?
+
+    private var accent: Color { tintAccent ?? theme.currentTheme.accent }
+    private var secondary: Color { tintSecondary ?? theme.currentTheme.secondary }
 
     var body: some View {
         NavigationStack {
             ZStack {
                 LinearGradient(
                     colors: [
-                        theme.currentTheme.accent.opacity(0.6),
-                        theme.currentTheme.secondary.opacity(0.4),
-                        theme.currentTheme.accent.opacity(0.25),
+                        accent.opacity(0.6),
+                        secondary.opacity(0.4),
+                        accent.opacity(0.25),
                         Color(.systemBackground).opacity(0.3)
                     ],
                     startPoint: .topLeading,
@@ -98,6 +110,7 @@ struct SyncedLyricsSheet: View {
                     Button { dismiss() } label: {
                         Image(systemName: "xmark")
                             .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.white)
                     }
                 }
             }
@@ -106,14 +119,22 @@ struct SyncedLyricsSheet: View {
         .onReceive(Timer.publish(every: 0.15, on: .main, in: .common).autoconnect()) { _ in
             updateCurrentLine()
         }
+        .task(id: player.currentTrack?.fileName) {
+            if let fn = player.currentTrack?.fileName,
+               let data = player.artworkCache[fn],
+               let img = UIImage(data: data) {
+                cachedCover = img
+            } else {
+                cachedCover = nil
+            }
+        }
     }
 
     private var lyricsPlayerBar: some View {
         VStack(spacing: 10) {
             // Track info
             HStack(spacing: 12) {
-                if let data = player.artworkCache[player.currentTrack?.fileName ?? ""],
-                   let uiImage = UIImage(data: data) {
+                if let uiImage = cachedCover {
                     Image(uiImage: uiImage)
                         .resizable()
                         .scaledToFill()
@@ -189,17 +210,31 @@ struct SyncedLyricsSheet: View {
 
     private func updateCurrentLine() {
         let time = player.currentTime + 0.3
-        var newIndex = 0
-        for (i, line) in lines.enumerated() {
-            if line.time <= time {
-                newIndex = i
-            } else {
-                break
+        // Fast path: if we're still in the same line (which is the case
+        // 80%+ of the time), skip the search entirely.
+        if currentLineIndex < lines.count,
+           lines[currentLineIndex].time <= time {
+            let next = currentLineIndex + 1
+            if next >= lines.count || lines[next].time > time {
+                return
             }
         }
-        if newIndex != currentLineIndex {
+        // Binary search for the last line whose time ≤ current time.
+        var lo = 0
+        var hi = lines.count - 1
+        var found = 0
+        while lo <= hi {
+            let mid = (lo + hi) / 2
+            if lines[mid].time <= time {
+                found = mid
+                lo = mid + 1
+            } else {
+                hi = mid - 1
+            }
+        }
+        if found != currentLineIndex {
             withAnimation(.easeInOut(duration: 0.3)) {
-                currentLineIndex = newIndex
+                currentLineIndex = found
             }
         }
     }

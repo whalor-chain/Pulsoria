@@ -1,6 +1,9 @@
+import AVFoundation
 import Combine
+import FirebaseAuth
 import FirebaseCore
 import FirebaseFirestore
+import FirebaseStorage
 import Foundation
 import OSLog
 
@@ -19,9 +22,10 @@ import OSLog
 /// track. When the host pauses, it writes `pausedOffset` and clears
 /// `startedAt`; clients seek there and pause.
 ///
-/// Clients that do not own the same track (matched by `fileName`) still
-/// subscribe to the metadata and chat — they just don't produce audio.
-/// Chat works regardless.
+/// Clients that own the matching track locally play their own copy. Clients
+/// without it fall back to streaming the host's upload from Firebase Storage
+/// (`playback.streamURL`) via an `AVPlayer`. If the upload hasn't finished
+/// yet, they stay metadata-only until the URL lands. Chat works regardless.
 @MainActor
 final class ListeningRoomManager: ObservableObject {
     static let shared = ListeningRoomManager()
@@ -49,6 +53,15 @@ final class ListeningRoomManager: ObservableObject {
     /// snapshot if nothing relevant changed.
     private var lastAppliedPlayback: RoomPlaybackState?
 
+    /// AVPlayer used when this client is a non-host listener without a local
+    /// copy of the host's track — it streams from the Storage download URL
+    /// the host writes into `playback.streamURL`. Nil when either we're the
+    /// host, we have a local match, or no stream URL has arrived yet.
+    private var remotePlayer: AVPlayer?
+
+    /// Storage handle, lazy for the same reason `db` is.
+    private lazy var storage = Storage.storage()
+
     private init() {}
 
     // MARK: - Create
@@ -60,7 +73,7 @@ final class ListeningRoomManager: ObservableObject {
             throw RoomError.firebaseUnavailable
         }
         let auth = AuthManager.shared
-        let hostID = auth.appleUserID.isEmpty ? "anon-\(UUID().uuidString.prefix(6))" : auth.appleUserID
+        let hostID = try await currentAuthUID()
         let hostName = auth.userName.isEmpty ? "Host" : auth.userName
 
         let playback = RoomPlaybackState(
@@ -112,6 +125,10 @@ final class ListeningRoomManager: ObservableObject {
                 if (created as? Bool) == true {
                     isHost = true
                     subscribe(to: code)
+                    // Kick off upload in the background so clients that don't
+                    // own this file locally can stream it. We write the URL
+                    // back into `playback.streamURL` on success.
+                    uploadTrackInBackground(track, code: code)
                     return code
                 }
             } catch {
@@ -131,7 +148,7 @@ final class ListeningRoomManager: ObservableObject {
         guard RoomCode.isValid(code) else { throw RoomError.invalidCode }
 
         let auth = AuthManager.shared
-        let userID = auth.appleUserID.isEmpty ? "anon-\(UUID().uuidString.prefix(6))" : auth.appleUserID
+        let userID = try await currentAuthUID()
         let displayName = auth.userName.isEmpty ? "Listener" : auth.userName
 
         let ref = db.collection("rooms").document(code)
@@ -153,12 +170,17 @@ final class ListeningRoomManager: ObservableObject {
             teardown()
             return
         }
-        let userID = AuthManager.shared.appleUserID
+        // Firebase Auth UID is the participants-map key we wrote on join —
+        // it must match here to delete our slot. If somehow we're not signed
+        // in (shouldn't happen after create/join), fall back to no-op key.
+        let userID = Auth.auth().currentUser?.uid ?? ""
 
         if isHost {
             // Host leaving ends the room for everyone.
             Task { [weak self] in
                 try? await self?.db.collection("rooms").document(code).delete()
+                // Best-effort: delete uploaded audio so we don't leak storage.
+                await self?.deleteRoomStorage(code: code)
                 await MainActor.run { self?.teardown() }
             }
         } else {
@@ -183,6 +205,7 @@ final class ListeningRoomManager: ObservableObject {
         isHost = false
         lastAppliedPlayback = nil
         connectionError = nil
+        stopRemotePlayback()
     }
 
     // MARK: - Subscribe
@@ -257,8 +280,14 @@ final class ListeningRoomManager: ObservableObject {
             "playback.pausedOffset": 0,
             "playback.isPlaying": true,
             "playback.durationSeconds": 0,
+            // Clear the old stream URL so clients don't keep playing the
+            // previous file while the new one uploads.
+            "playback.streamURL": NSNull(),
             "lastActivity": FieldValue.serverTimestamp()
         ])
+        if let code = currentRoom?.id {
+            uploadTrackInBackground(track, code: code)
+        }
     }
 
     private func updatePlayback(_ fields: [String: Any]) async throws {
@@ -272,7 +301,7 @@ final class ListeningRoomManager: ObservableObject {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, let code = currentRoom?.id else { return }
         let auth = AuthManager.shared
-        let userID = auth.appleUserID.isEmpty ? "anon-\(UUID().uuidString.prefix(6))" : auth.appleUserID
+        let userID = try await currentAuthUID()
         let displayName = auth.userName.isEmpty ? "Listener" : auth.userName
 
         let message = RoomChatMessage(
@@ -288,10 +317,12 @@ final class ListeningRoomManager: ObservableObject {
 
     // MARK: - Playback sync
 
-    /// Given the latest playback state from Firestore, bring the local
-    /// `AudioPlayerManager` in line. Only reacts to *changes* — repeated
-    /// snapshots with the same state are ignored so we don't re-seek on
-    /// every tick.
+    /// Given the latest playback state from Firestore, bring the client's
+    /// audio in line with the host. Prefers the locally-owned copy of the
+    /// track (via `AudioPlayerManager`); falls back to streaming the host's
+    /// uploaded copy via `AVPlayer` when no local match exists. Only reacts
+    /// to *changes* — repeated snapshots with the same state are ignored so
+    /// we don't re-seek on every tick.
     private func applyPlaybackIfNeeded(_ incoming: RoomPlaybackState) {
         // Host doesn't mirror its own writes — it already owns the player.
         guard !isHost else {
@@ -301,28 +332,154 @@ final class ListeningRoomManager: ObservableObject {
         defer { lastAppliedPlayback = incoming }
 
         let player = AudioPlayerManager.shared
+        let previous = lastAppliedPlayback
 
-        // If the track changed, try to play the matching file in the
-        // client's local library. If it doesn't exist, bail out of audio
-        // sync but keep UI updated.
-        let trackChanged = lastAppliedPlayback?.trackFileName != incoming.trackFileName
+        let trackChanged = previous?.trackFileName != incoming.trackFileName
+        let streamChanged = previous?.streamURL != incoming.streamURL
+        let localIndex = player.tracks.firstIndex { $0.fileName == incoming.trackFileName }
+
         if trackChanged {
-            if let index = player.tracks.firstIndex(where: { $0.fileName == incoming.trackFileName }) {
+            // New track — drop any running remote stream and pick the best
+            // local/remote source for this one.
+            stopRemotePlayback()
+            if let index = localIndex {
                 player.playTrack(at: index)
+            } else if let urlString = incoming.streamURL, let url = URL(string: urlString) {
+                // Keep the local player from fighting with the stream.
+                if player.isPlaying { player.pause() }
+                startRemotePlayback(url: url)
             } else {
-                // No local match — skip audio; UI still shows metadata.
+                // No local, no stream yet — wait for stream to land.
                 return
             }
+        } else if streamChanged, localIndex == nil, remotePlayer == nil,
+                  let urlString = incoming.streamURL, let url = URL(string: urlString) {
+            // Same track, but stream URL just became available (upload
+            // finished after we already attached to the room).
+            if player.isPlaying { player.pause() }
+            startRemotePlayback(url: url)
         }
 
-        // Compute where we should be and seek there.
+        // Apply seek + play/pause to whichever source is driving audio.
         let targetOffset = resolvedOffset(for: incoming, now: Date())
-        player.seek(to: targetOffset)
-        if incoming.isPlaying {
-            if !player.isPlaying { player.play() }
-        } else {
-            if player.isPlaying { player.pause() }
+        if let remotePlayer {
+            remotePlayer.seek(to: CMTime(seconds: targetOffset, preferredTimescale: 600))
+            if incoming.isPlaying {
+                remotePlayer.play()
+            } else {
+                remotePlayer.pause()
+            }
+        } else if localIndex != nil {
+            player.seek(to: targetOffset)
+            if incoming.isPlaying {
+                if !player.isPlaying { player.play() }
+            } else {
+                if player.isPlaying { player.pause() }
+            }
         }
+    }
+
+    private func startRemotePlayback(url: URL) {
+        remotePlayer?.pause()
+        remotePlayer = AVPlayer(url: url)
+    }
+
+    private func stopRemotePlayback() {
+        remotePlayer?.pause()
+        remotePlayer = nil
+    }
+
+    // MARK: - Track upload (host only)
+
+    /// Spawns a detached upload so `createRoom` / `hostSwitchTrack` return
+    /// to the UI immediately. On success we write the download URL back
+    /// into `playback.streamURL` so listeners can stream.
+    private func uploadTrackInBackground(_ track: Track, code: String) {
+        Task { [weak self] in
+            guard let self else { return }
+            guard let url = await self.uploadTrackForRoom(track, code: code) else { return }
+            // Only write back if the room still exists and the track didn't
+            // change under us while the upload was running.
+            guard await self.shouldWriteStreamURL(forTrack: track.fileName, code: code) else { return }
+            try? await self.db.collection("rooms").document(code).updateData([
+                "playback.streamURL": url
+            ])
+        }
+    }
+
+    /// True iff we're still in the room, still the host, and the current
+    /// track matches the one whose upload just finished. Prevents us from
+    /// publishing a stale URL after the host already switched tracks.
+    private func shouldWriteStreamURL(forTrack fileName: String, code: String) async -> Bool {
+        guard isHost, let room = currentRoom, room.id == code else { return false }
+        return room.playback.trackFileName == fileName
+    }
+
+    /// Uploads the track's local audio file to `rooms/{code}/audio.{ext}`
+    /// and returns the download URL. Uses `putFileAsync` so the SDK streams
+    /// from disk rather than loading the whole file into memory — important
+    /// for multi-MB tracks.
+    private func uploadTrackForRoom(_ track: Track, code: String) async -> String? {
+        guard let fileURL = track.fileURL,
+              FileManager.default.fileExists(atPath: fileURL.path) else {
+            return nil
+        }
+        let ext = track.fileExtension.isEmpty ? "mp3" : track.fileExtension.lowercased()
+        let ref = storage.reference().child("rooms/\(code)/audio.\(ext)")
+        let meta = StorageMetadata()
+        meta.contentType = Self.contentType(forExtension: ext)
+
+        do {
+            _ = try await ref.putFileAsync(from: fileURL, metadata: meta)
+            return try await ref.downloadURL().absoluteString
+        } catch {
+            Logger.beatStore.error(
+                "Room track upload failed: \(error.localizedDescription, privacy: .public)"
+            )
+            return nil
+        }
+    }
+
+    /// Best-effort cleanup of the room's uploaded audio on host leave.
+    /// Non-fatal if it fails (e.g. offline) — Storage isn't source of truth.
+    private func deleteRoomStorage(code: String) async {
+        let folder = storage.reference().child("rooms/\(code)")
+        do {
+            let list = try await folder.listAll()
+            for item in list.items {
+                try? await item.delete()
+            }
+        } catch {
+            Logger.beatStore.debug(
+                "Room storage cleanup failed for \(code, privacy: .public): \(error.localizedDescription, privacy: .public)"
+            )
+        }
+    }
+
+    private static func contentType(forExtension ext: String) -> String {
+        switch ext.lowercased() {
+        case "mp3": return "audio/mpeg"
+        case "m4a", "aac": return "audio/mp4"
+        case "wav": return "audio/wav"
+        case "aiff": return "audio/aiff"
+        case "flac": return "audio/flac"
+        case "ogg": return "audio/ogg"
+        case "wma": return "audio/x-ms-wma"
+        default: return "audio/\(ext.lowercased())"
+        }
+    }
+
+    // MARK: - Auth bridge
+
+    /// Firestore rules require `request.auth != null` and tie ownership to
+    /// `request.auth.uid`. Apple Sign-In (used elsewhere for UI identity)
+    /// is not visible to Firestore, so every write path here must attach a
+    /// Firebase Auth UID. We sign in anonymously on first use and re-use
+    /// the session for the lifetime of the install.
+    private func currentAuthUID() async throws -> String {
+        if let uid = Auth.auth().currentUser?.uid { return uid }
+        let result = try await Auth.auth().signInAnonymously()
+        return result.user.uid
     }
 
     /// Pure math: translate a playback state + current wall clock into the

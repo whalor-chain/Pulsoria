@@ -18,8 +18,7 @@ struct ShopView: View {
         NavigationStack {
             Group {
                 if store.isLoading && store.allBeats.isEmpty {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    beatGridSkeleton
                 } else if store.filteredBeats.isEmpty {
                     emptyState
                 } else {
@@ -57,6 +56,8 @@ struct ShopView: View {
                                 .foregroundStyle(store.hasActiveFilters
                                                  ? theme.currentTheme.accent
                                                  : .secondary)
+                                .contentTransition(.symbolEffect(.replace))
+                                .symbolEffect(.bounce, value: store.hasActiveFilters)
                         }
                         .accessibilityLabel(Loc.a11yFilters)
                         .accessibilityValue(store.hasActiveFilters ? "active" : "none")
@@ -67,6 +68,7 @@ struct ShopView: View {
                             } label: {
                                 Image(systemName: "plus.circle")
                                     .foregroundStyle(theme.currentTheme.accent)
+                                    .symbolEffect(.bounce, value: showUploadSheet)
                             }
                             .accessibilityLabel(Loc.uploadBeat)
                         }
@@ -105,6 +107,35 @@ struct ShopView: View {
         .navigationDestination(for: Beat.self) { beat in
             BeatDetailView(beat: beat)
         }
+    }
+
+    // MARK: - Skeleton (initial load)
+
+    /// Placeholder grid shown while `BeatStoreManager` is fetching the
+    /// first page. Mirrors the real `BeatCardView` layout (square art
+    /// on top, title/price stubs below) so the swap to real data
+    /// doesn't shift anything around on screen.
+    private var beatGridSkeleton: some View {
+        ScrollView {
+            LazyVGrid(columns: columns, spacing: 12) {
+                ForEach(0..<6, id: \.self) { _ in
+                    VStack(alignment: .leading, spacing: 8) {
+                        Skeleton(cornerRadius: 14)
+                            .aspectRatio(1, contentMode: .fit)
+                        Skeleton(cornerRadius: 4)
+                            .frame(height: 14)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Skeleton(cornerRadius: 4)
+                            .frame(height: 11)
+                            .frame(width: 80, alignment: .leading)
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+            .padding(.bottom, 100)
+        }
+        .disabled(true)
     }
 
     // MARK: - Empty State
