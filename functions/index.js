@@ -340,8 +340,18 @@ async function userProfile(uid) {
 }
 
 async function fcmToken(uid) {
-  const snap = await db.collection("users").doc(uid).get();
-  return snap.exists ? snap.get("fcmToken") : null;
+  // FCM tokens moved to `userPrivate/{uid}` so they're no longer
+  // readable via the public `users/{uid}` doc. We fall back to the
+  // legacy location so pushes keep working for installs that haven't
+  // yet written the new private doc — the client scrubs the legacy
+  // field on next token refresh.
+  const priv = await db.collection("userPrivate").doc(uid).get();
+  if (priv.exists) {
+    const t = priv.get("fcmToken");
+    if (t) return t;
+  }
+  const pub = await db.collection("users").doc(uid).get();
+  return pub.exists ? pub.get("fcmToken") || null : null;
 }
 
 async function displayName(uid) {

@@ -23,8 +23,11 @@ import UserNotifications
 ///    method swizzling wires `didRegisterForRemoteNotificationsWithDeviceToken`
 ///    automatically.
 ///
-/// The client writes its FCM token to `users/{uid}.fcmToken` so the
-/// server side (Cloud Functions) can fan out pushes by uid.
+/// The client writes its FCM token to `userPrivate/{uid}.fcmToken` —
+/// a separate owner-only collection so the token isn't world-readable
+/// via the public `users/{uid}` doc (FCM tokens in the clear on a
+/// public doc are a small but real abuse vector if admin creds ever
+/// leak). Cloud Functions use the Admin SDK to read the private doc.
 @MainActor
 final class PushNotificationManager: NSObject {
     static let shared = PushNotificationManager()
@@ -139,13 +142,26 @@ final class PushNotificationManager: NSObject {
         }
         Task { @MainActor in
             do {
-                try await db.collection("users").document(uid).updateData([
+                // `setData(..., merge: true)` creates the doc on first
+                // launch (rule requires the owner create/update), then
+                // just patches `fcmToken`/`fcmPlatform` on subsequent
+                // token refreshes without clobbering future private
+                // fields added to the same doc.
+                try await db.collection("userPrivate").document(uid).setData([
                     "fcmToken": token,
                     "fcmPlatform": "ios"
-                ])
-                Logger.beatStore.info("FCM token persisted to users/\(uid, privacy: .public)")
+                ], merge: true)
+                Logger.beatStore.info("FCM token persisted to userPrivate/\(uid, privacy: .public)")
                 self.tokenPersisted = true
                 self.cancelRetries()
+
+                // Best-effort: scrub the legacy public-doc field so
+                // existing tokens don't linger on world-readable docs
+                // for old installs. No-op for users who never wrote it.
+                try? await db.collection("users").document(uid).updateData([
+                    "fcmToken": FieldValue.delete(),
+                    "fcmPlatform": FieldValue.delete()
+                ])
             } catch {
                 Logger.beatStore.error(
                     "FCM token persist failed: \(error.localizedDescription, privacy: .public)"

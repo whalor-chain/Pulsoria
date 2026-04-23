@@ -112,6 +112,16 @@ service cloud.firestore {
                                     && request.auth.uid == userID;
     }
 
+    // ─── Private per-user data ───────────────────────────────────────────
+    // Sibling collection to `users/{uid}` for fields that must NOT be
+    // publicly readable: FCM push tokens (spoofing vector if leaked),
+    // TON wallet address (financial de-anonymisation), future private
+    // settings. Cloud Functions read this via Admin SDK, bypassing rules.
+    match /userPrivate/{userID} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == userID;
+    }
+
     // ─── Friend code reverse index ───────────────────────────────────────
     match /friendCodes/{code} {
       // Anyone can look up a code → uid (that's the whole point).
