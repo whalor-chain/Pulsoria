@@ -321,10 +321,18 @@ class TonWalletManager: ObservableObject {
                     UserDefaults.standard.set(address, forKey: UserDefaultsKey.tonWalletAddress)
                     let userID = AuthManager.shared.appleUserID
                     if !userID.isEmpty {
-                        try? await db.collection("users").document(userID).setData([
+                        // Private mirror: Cloud Functions verify wallet
+                        // ownership by reading this doc (Admin SDK).
+                        try? await db.collection("userPrivate").document(userID).setData([
                             "tonWallet": address,
                             "updatedAt": Date().timeIntervalSince1970
                         ], merge: true)
+                        // One-time scrub of the legacy public field so
+                        // existing installs don't keep broadcasting the
+                        // address via users/{uid}.
+                        try? await db.collection("users").document(userID).updateData([
+                            "tonWallet": FieldValue.delete()
+                        ])
                     }
 
                     await fetchBalance()
@@ -348,10 +356,13 @@ class TonWalletManager: ObservableObject {
 
         let userID = AuthManager.shared.appleUserID
         if !userID.isEmpty {
-            try await db.collection("users").document(userID).setData([
+            try await db.collection("userPrivate").document(userID).setData([
                 "tonWallet": trimmed,
                 "updatedAt": Date().timeIntervalSince1970
             ], merge: true)
+            try? await db.collection("users").document(userID).updateData([
+                "tonWallet": FieldValue.delete()
+            ])
         }
 
         await fetchBalance()
@@ -375,6 +386,11 @@ class TonWalletManager: ObservableObject {
         let userID = AuthManager.shared.appleUserID
         if !userID.isEmpty {
             Task {
+                // Clear from private doc (primary storage) and the
+                // legacy public field if anything still lingers.
+                try? await db.collection("userPrivate").document(userID).updateData([
+                    "tonWallet": FieldValue.delete()
+                ])
                 try? await db.collection("users").document(userID).updateData([
                     "tonWallet": FieldValue.delete()
                 ])
@@ -412,14 +428,19 @@ class TonWalletManager: ObservableObject {
 
     // MARK: - Get Seller Wallet
 
-    func getSellerWallet(uploaderID: String) async -> String? {
-        guard !uploaderID.isEmpty else { return nil }
-        do {
-            let doc = try await db.collection("users").document(uploaderID).getDocument()
-            return doc.data()?["tonWallet"] as? String
-        } catch {
-            return nil
-        }
+    /// Returns the seller's TON address for a given beat. Reads from
+    /// the beat doc directly (`sellerWallet` field snapshotted at
+    /// upload time) — the seller's private user doc is off-limits to
+    /// other users, and the beat doc is the right place to carry a
+    /// publicly-visible payment address for that specific listing.
+    ///
+    /// Legacy beats uploaded before `sellerWallet` was added return
+    /// nil; the purchase UI shows "Seller hasn't set a wallet" and
+    /// disables the TON button until the seller re-lists the beat
+    /// with a connected wallet.
+    func getSellerWallet(for beat: Beat) -> String? {
+        guard let wallet = beat.sellerWallet, !wallet.isEmpty else { return nil }
+        return wallet
     }
 
     // MARK: - Send Payment via Tonkeeper

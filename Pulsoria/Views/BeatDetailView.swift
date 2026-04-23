@@ -435,8 +435,10 @@ struct BeatDetailView: View {
         tonPaymentStatus = .processing
 
         Task {
-            // Get seller's wallet address
-            guard let sellerWallet = await tonWallet.getSellerWallet(uploaderID: beat.uploaderID) else {
+            // Get seller's wallet address from the beat's own snapshot
+            // — the seller's private user doc is not readable to others
+            // (by design), so the payment address lives on the beat.
+            guard let sellerWallet = tonWallet.getSellerWallet(for: beat) else {
                 tonPaymentStatus = .failed
                 return
             }

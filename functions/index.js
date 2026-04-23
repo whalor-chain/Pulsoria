@@ -171,7 +171,11 @@ exports.cleanupStalePresence = onSchedule(
 // ─── 4. Verified beat purchase (TON on-chain) ───────────────────────────
 //
 // Client hands us `{ beatID, fromAddress }`. We:
-//   1. Look up the seller's wallet from their `users/{uploaderID}` doc.
+//   1. Pull the seller's wallet from `beats/{beatID}.sellerWallet`
+//      (snapshotted at upload time; seller's private user doc is not
+//      readable to buyers). Fallback to legacy `users/{uploaderID}
+//      .tonWallet` and `userPrivate/{uploaderID}.tonWallet` for beats
+//      uploaded before the sellerWallet field existed.
 //   2. Pull recent txs to that wallet from toncenter.
 //   3. Match one by (source, amount, recent time window).
 //   4. Record `purchases/{txHash}` transactionally — the doc id is the
@@ -213,9 +217,21 @@ exports.verifyAndRecordPurchase = onCall({ cors: true }, async (request) => {
     throw new HttpsError("failed-precondition", "Can't buy your own beat.");
   }
 
-  const sellerSnap = await db.collection("users").doc(uploaderID).get();
-  const sellerAddress = sellerSnap.exists ? sellerSnap.get("tonWallet") : null;
-  if (typeof sellerAddress !== "string" || !sellerAddress) {
+  // Prefer the beat's own snapshotted sellerWallet (public, scoped to
+  // this listing). Fallback: legacy public `users/{uploaderID}.tonWallet`
+  // for pre-existing beats, then `userPrivate/{uploaderID}.tonWallet`
+  // via Admin SDK. Once all legacy beats are re-listed this falls to
+  // the first branch only.
+  let sellerAddress = typeof beat.sellerWallet === "string" ? beat.sellerWallet : "";
+  if (!sellerAddress) {
+    const sellerPub = await db.collection("users").doc(uploaderID).get();
+    sellerAddress = sellerPub.exists ? (sellerPub.get("tonWallet") || "") : "";
+  }
+  if (!sellerAddress) {
+    const sellerPriv = await db.collection("userPrivate").doc(uploaderID).get();
+    sellerAddress = sellerPriv.exists ? (sellerPriv.get("tonWallet") || "") : "";
+  }
+  if (!sellerAddress) {
     throw new HttpsError("failed-precondition", "Seller has no wallet configured.");
   }
 
