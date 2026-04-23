@@ -86,6 +86,12 @@ struct Beat: Identifiable, Equatable, Hashable {
     var audioURL: String?
     let dateAdded: Date
     var purchasedBy: [String]
+    /// Seller's TON wallet address — attached to the beat at upload
+    /// time so buyers can pay without needing to read the seller's
+    /// private user doc. Optional for legacy beats uploaded before
+    /// this field existed. Seller explicitly opts in by connecting
+    /// a wallet before listing.
+    var sellerWallet: String?
 
     init(
         id: String? = nil,
@@ -102,7 +108,8 @@ struct Beat: Identifiable, Equatable, Hashable {
         coverImageURL: String? = nil,
         audioURL: String? = nil,
         dateAdded: Date = Date(),
-        purchasedBy: [String] = []
+        purchasedBy: [String] = [],
+        sellerWallet: String? = nil
     ) {
         self.id = id
         self.title = title
@@ -119,6 +126,7 @@ struct Beat: Identifiable, Equatable, Hashable {
         self.audioURL = audioURL
         self.dateAdded = dateAdded
         self.purchasedBy = purchasedBy
+        self.sellerWallet = sellerWallet
     }
 
     var formattedPrice: String {

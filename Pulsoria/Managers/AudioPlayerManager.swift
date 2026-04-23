@@ -426,18 +426,31 @@ class AudioPlayerManager: NSObject, ObservableObject {
             }
         } catch {
             Logger.audio.error("Failed to play track: \(error.localizedDescription, privacy: .public)")
+            // Reset state so subsequent `isPlaying` reads don't lie:
+            // if the AVAudioPlayer init threw (bad URL, decoded file
+            // corrupted, etc.), we can end up with a stale `true`
+            // from a previous play while `audioPlayer` is nil.
+            isPlaying = false
+            audioPlayer = nil
+            duration = 0
+            currentTime = 0
+            stopTimers()
         }
     }
 
     func play() {
         if audioPlayer == nil, !tracks.isEmpty {
             playTrack(at: currentTrackIndex)
-        } else {
-            audioPlayer?.play()
-            isPlaying = true
-            startTimers()
-            updateNowPlayingInfo()
+            return
         }
+        // If there's no player and no tracks to spin one up, bail —
+        // previously we'd fall through and set `isPlaying = true`
+        // with a nil audioPlayer, which views later read as a lie.
+        guard let audioPlayer else { return }
+        audioPlayer.play()
+        isPlaying = true
+        startTimers()
+        updateNowPlayingInfo()
     }
 
     func pause() {
@@ -553,6 +566,16 @@ class AudioPlayerManager: NSObject, ObservableObject {
 
     private func startCrossfadeOut() {
         crossfadeTimer?.invalidate()
+        // Bail on nonsensically small durations — Timer with
+        // stepInterval ≈ 0 fires as fast as the run loop can service
+        // it and freezes the main thread. `crossfadeDuration == 0` is
+        // already filtered at call sites; this is belt-and-braces
+        // against future callers or corrupted UserDefaults values.
+        guard crossfadeDuration >= 0.1 else {
+            crossfadePlayer?.stop()
+            crossfadePlayer = nil
+            return
+        }
         let fadeSteps = 20
         let stepInterval = crossfadeDuration / Double(fadeSteps)
         let volumeStep = (crossfadePlayer?.volume ?? 1.0) / Float(fadeSteps)
@@ -574,6 +597,13 @@ class AudioPlayerManager: NSObject, ObservableObject {
     }
 
     private func startCrossfadeIn() {
+        // Same guard as startCrossfadeOut — no-op for degenerate
+        // crossfade duration. Playback volume is already 1.0 when
+        // we enter here without fading, so nothing else to do.
+        guard crossfadeDuration >= 0.1 else {
+            audioPlayer?.volume = 1.0
+            return
+        }
         let fadeSteps = 20
         let stepInterval = crossfadeDuration / Double(fadeSteps)
         let volumeStep: Float = 1.0 / Float(fadeSteps)

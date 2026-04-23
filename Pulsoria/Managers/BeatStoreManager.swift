@@ -186,6 +186,14 @@ class BeatStoreManager: ObservableObject {
         }
 
         // Create Firestore document — id is the document path, not stored in body
+        // Snapshot the seller's connected wallet so buyers can pay
+        // without needing to read the seller's private user doc.
+        // Empty string means "no wallet configured" — UI falls back
+        // to showing "contact seller" or disabling TON purchase.
+        let sellerWallet = TonWalletManager.shared.isConnected
+            ? TonWalletManager.shared.walletAddress
+            : nil
+
         let beat = Beat(
             title: title,
             beatmakerName: beatmakerName,
@@ -199,7 +207,8 @@ class BeatStoreManager: ObservableObject {
             coverImageName: coverImageName,
             coverImageURL: coverURL,
             audioURL: audioURL,
-            dateAdded: Date()
+            dateAdded: Date(),
+            sellerWallet: sellerWallet
         )
 
         // setData(from:) is a synchronous throws — it encodes and enqueues

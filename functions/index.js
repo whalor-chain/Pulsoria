@@ -171,7 +171,11 @@ exports.cleanupStalePresence = onSchedule(
 // ─── 4. Verified beat purchase (TON on-chain) ───────────────────────────
 //
 // Client hands us `{ beatID, fromAddress }`. We:
-//   1. Look up the seller's wallet from their `users/{uploaderID}` doc.
+//   1. Pull the seller's wallet from `beats/{beatID}.sellerWallet`
+//      (snapshotted at upload time; seller's private user doc is not
+//      readable to buyers). Fallback to legacy `users/{uploaderID}
+//      .tonWallet` and `userPrivate/{uploaderID}.tonWallet` for beats
+//      uploaded before the sellerWallet field existed.
 //   2. Pull recent txs to that wallet from toncenter.
 //   3. Match one by (source, amount, recent time window).
 //   4. Record `purchases/{txHash}` transactionally — the doc id is the
@@ -213,9 +217,39 @@ exports.verifyAndRecordPurchase = onCall({ cors: true }, async (request) => {
     throw new HttpsError("failed-precondition", "Can't buy your own beat.");
   }
 
-  const sellerSnap = await db.collection("users").doc(uploaderID).get();
-  const sellerAddress = sellerSnap.exists ? sellerSnap.get("tonWallet") : null;
-  if (typeof sellerAddress !== "string" || !sellerAddress) {
+  // Verify the caller actually owns `fromAddress`. Without this,
+  // an attacker could feed us someone else's wallet address + a
+  // real tx from that wallet to the seller — and we'd credit the
+  // *attacker's* uid with the purchase, stealing the beat. Only
+  // the authenticated user's own wallet (per userPrivate/{uid})
+  // may be used as the payment source.
+  const buyerPriv = await db.collection("userPrivate").doc(auth.uid).get();
+  const buyerWallet = buyerPriv.exists ? buyerPriv.get("tonWallet") : null;
+  if (typeof buyerWallet !== "string" || !buyerWallet) {
+    throw new HttpsError("failed-precondition", "Connect your TON wallet in Pulsoria first.");
+  }
+  if (buyerWallet !== fromAddress) {
+    throw new HttpsError(
+      "permission-denied",
+      "Payment address doesn't match your connected wallet."
+    );
+  }
+
+  // Prefer the beat's own snapshotted sellerWallet (public, scoped to
+  // this listing). Fallback: legacy public `users/{uploaderID}.tonWallet`
+  // for pre-existing beats, then `userPrivate/{uploaderID}.tonWallet`
+  // via Admin SDK. Once all legacy beats are re-listed this falls to
+  // the first branch only.
+  let sellerAddress = typeof beat.sellerWallet === "string" ? beat.sellerWallet : "";
+  if (!sellerAddress) {
+    const sellerPub = await db.collection("users").doc(uploaderID).get();
+    sellerAddress = sellerPub.exists ? (sellerPub.get("tonWallet") || "") : "";
+  }
+  if (!sellerAddress) {
+    const sellerPriv = await db.collection("userPrivate").doc(uploaderID).get();
+    sellerAddress = sellerPriv.exists ? (sellerPriv.get("tonWallet") || "") : "";
+  }
+  if (!sellerAddress) {
     throw new HttpsError("failed-precondition", "Seller has no wallet configured.");
   }
 
@@ -340,8 +374,18 @@ async function userProfile(uid) {
 }
 
 async function fcmToken(uid) {
-  const snap = await db.collection("users").doc(uid).get();
-  return snap.exists ? snap.get("fcmToken") : null;
+  // FCM tokens moved to `userPrivate/{uid}` so they're no longer
+  // readable via the public `users/{uid}` doc. We fall back to the
+  // legacy location so pushes keep working for installs that haven't
+  // yet written the new private doc — the client scrubs the legacy
+  // field on next token refresh.
+  const priv = await db.collection("userPrivate").doc(uid).get();
+  if (priv.exists) {
+    const t = priv.get("fcmToken");
+    if (t) return t;
+  }
+  const pub = await db.collection("users").doc(uid).get();
+  return pub.exists ? pub.get("fcmToken") || null : null;
 }
 
 async function displayName(uid) {

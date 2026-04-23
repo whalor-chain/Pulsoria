@@ -191,10 +191,16 @@ final class FriendsManager: ObservableObject {
         let displayName = Self.currentDisplayName()
 
         if snap.exists {
-            try? await ref.updateData([
-                "displayName": displayName,
-                "lastSeen": FieldValue.serverTimestamp()
-            ])
+            do {
+                try await ref.updateData([
+                    "displayName": displayName,
+                    "lastSeen": FieldValue.serverTimestamp()
+                ])
+            } catch {
+                Logger.beatStore.error(
+                    "ensureMyProfile.updateData failed: \(error.localizedDescription, privacy: .public)"
+                )
+            }
             return
         }
 
@@ -224,9 +230,15 @@ final class FriendsManager: ObservableObject {
         guard isFirebaseReady, let uid = Auth.auth().currentUser?.uid else { return }
         let displayName = Self.currentDisplayName()
         Task {
-            try? await self.db.collection("users").document(uid).updateData([
-                "displayName": displayName
-            ])
+            do {
+                try await self.db.collection("users").document(uid).updateData([
+                    "displayName": displayName
+                ])
+            } catch {
+                Logger.beatStore.error(
+                    "refreshMyProfile.updateData failed: \(error.localizedDescription, privacy: .public)"
+                )
+            }
             await self.syncMyAvatar()
         }
     }
@@ -592,9 +604,15 @@ final class FriendsManager: ObservableObject {
     private func writeCurrentRoomCode(_ code: String?) {
         guard isFirebaseReady, let uid = Auth.auth().currentUser?.uid else { return }
         Task {
-            try? await self.db.collection("users").document(uid).updateData([
-                "currentRoomCode": code ?? NSNull()
-            ])
+            do {
+                try await self.db.collection("users").document(uid).updateData([
+                    "currentRoomCode": code ?? NSNull()
+                ])
+            } catch {
+                Logger.beatStore.error(
+                    "writeCurrentRoomCode failed: \(error.localizedDescription, privacy: .public)"
+                )
+            }
         }
     }
 
@@ -689,7 +707,17 @@ final class FriendsManager: ObservableObject {
             } else {
                 data["nowPlaying"] = NSNull()
             }
-            try? await ref.updateData(data)
+            do {
+                try await ref.updateData(data)
+            } catch {
+                // Presence is the most user-visible Firestore write —
+                // swallowing this silently meant friends saw us as
+                // offline with no hint from the app why. Logging lets
+                // us diagnose rule / network failures in prod.
+                Logger.beatStore.error(
+                    "writePresence failed: \(error.localizedDescription, privacy: .public)"
+                )
+            }
         }
     }
 
@@ -732,10 +760,16 @@ final class FriendsManager: ObservableObject {
             return
         }
         Task {
-            try? await db.collection("users").document(uid).updateData([
-                "lastSeen": FieldValue.serverTimestamp(),
-                "nowPlaying.isPlaying": true
-            ])
+            do {
+                try await db.collection("users").document(uid).updateData([
+                    "lastSeen": FieldValue.serverTimestamp(),
+                    "nowPlaying.isPlaying": true
+                ])
+            } catch {
+                Logger.beatStore.error(
+                    "bumpHeartbeat failed: \(error.localizedDescription, privacy: .public)"
+                )
+            }
         }
     }
 
