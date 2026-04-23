@@ -867,13 +867,20 @@ final class FriendsManager: ObservableObject {
             return false
         }
 
-        // Throttle — one reaction per ~1.5s per friend.
+        // Throttle — one reaction per ~1.5s per friend. Written
+        // *optimistically before* the Firestore await: otherwise two
+        // rapid taps both pass the check (empty dict), both enter the
+        // await, both write. `@MainActor` serialises the dict access,
+        // but await-suspension lets a second call interleave with
+        // the first's round-trip. Rolled back on failure so a
+        // throttled-out user can retry immediately.
         let now = Date()
         if let last = lastReactionSendByFriend[toFriendID],
            now.timeIntervalSince(last) < reactionMinIntervalPerFriend {
             Logger.beatStore.info("sendReaction: throttled (last sent \(now.timeIntervalSince(last))s ago)")
             return false
         }
+        lastReactionSendByFriend[toFriendID] = now
 
         // Track snapshot is best-effort — we send the reaction even if
         // the friend isn't currently live, so the user gets feedback
@@ -901,10 +908,12 @@ final class FriendsManager: ObservableObject {
 
         do {
             let ref = try await db.collection("reactions").addDocument(data: data)
-            lastReactionSendByFriend[toFriendID] = now
             Logger.beatStore.info("sendReaction: wrote \(ref.documentID, privacy: .public) emoji=\(emoji, privacy: .public)")
             return true
         } catch {
+            // Roll the throttle timestamp back so the user can retry
+            // without waiting out a 1.5 s window they never "used".
+            lastReactionSendByFriend.removeValue(forKey: toFriendID)
             Logger.beatStore.error(
                 "sendReaction failed: \(error.localizedDescription, privacy: .public)"
             )

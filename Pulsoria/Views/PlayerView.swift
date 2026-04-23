@@ -674,9 +674,12 @@ struct PlayerView: View {
 
     /// Nudges `CoverPaletteManager` to extract (or re-use) the
     /// gradient palette for the track. Cheap when palette is cached —
-    /// the manager dedups internally.
+    /// the manager dedups internally. Skipped entirely when the
+    /// cover-gradient feature is off, otherwise we'd burn CoreImage
+    /// cycles + memory extracting palettes nobody will ever render.
     private func kickPaletteExtraction(for fileName: String?) {
-        guard let fileName,
+        guard theme.useCoverGradient,
+              let fileName,
               let data = player.artworkCache[fileName] else { return }
         CoverPaletteManager.shared.ensurePalette(for: fileName, imageData: data)
     }
